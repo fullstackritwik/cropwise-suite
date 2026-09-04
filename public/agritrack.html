@@ -1,0 +1,1339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AgriTrack — Farm Operations Management</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --green-50:#eef7f0; --green-100:#dcefe1; --green-500:#2f7d47; --green-600:#276b3d; --green-700:#1f5631;
+  --bg:#f6f7f6; --card:#ffffff; --ink:#12181d; --ink-2:#3b464f; --muted:#6b7681; --muted-2:#8c959e;
+  --line:#e6e9e7; --line-2:#eff1ef;
+  --amber-50:#fdf6e7; --amber-600:#a76a12; --amber-500:#c98a1c;
+  --red-50:#fdeeed; --red-600:#b4322b;
+  --blue-50:#eef3fb; --blue-600:#2f5fa8;
+  --shadow-sm:0 1px 2px rgba(16,24,32,.05);
+  --shadow:0 1px 3px rgba(16,24,32,.06),0 8px 24px -12px rgba(16,24,32,.14);
+  --shadow-lg:0 24px 60px -20px rgba(16,24,32,.28);
+  --r-sm:8px; --r:12px; --r-lg:16px;
+  --sb:248px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  background:var(--bg); color:var(--ink); -webkit-font-smoothing:antialiased;
+  font-size:14px; line-height:1.5;
+}
+button{font:inherit;color:inherit;cursor:pointer}
+input,select,textarea{font:inherit;color:inherit}
+a{color:inherit;text-decoration:none}
+svg{flex:none}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:#d7dbd8;border:3px solid transparent;background-clip:content-box;border-radius:10px}
+
+/* ---------- shell ---------- */
+.app{display:flex;min-height:100vh}
+.sidebar{
+  width:var(--sb);flex:none;background:#fff;border-right:1px solid var(--line);
+  display:flex;flex-direction:column;position:sticky;top:0;height:100vh;
+  transition:width .22s cubic-bezier(.4,0,.2,1);z-index:60;
+}
+.app.collapsed .sidebar{--sb:72px}
+.sb-head{display:flex;align-items:center;gap:10px;padding:18px 16px 14px;height:64px}
+.logo{width:30px;height:30px;border-radius:9px;background:linear-gradient(150deg,var(--green-500),var(--green-700));display:grid;place-items:center;color:#fff;flex:none}
+.brand{font-weight:700;letter-spacing:-.02em;font-size:15px;white-space:nowrap}
+.brand small{display:block;font-weight:500;font-size:11px;color:var(--muted-2);letter-spacing:0}
+.sb-toggle{margin-left:auto;width:28px;height:28px;border:1px solid var(--line);background:#fff;border-radius:8px;display:grid;place-items:center;color:var(--muted);transition:.15s}
+.sb-toggle:hover{background:var(--bg);color:var(--ink)}
+.nav{padding:8px;display:flex;flex-direction:column;gap:2px;overflow-y:auto;flex:1}
+.nav-label{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted-2);padding:14px 10px 6px}
+.nav-item{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:9px;border:0;background:none;width:100%;text-align:left;color:var(--ink-2);font-weight:500;transition:.14s;position:relative;white-space:nowrap}
+.nav-item:hover{background:var(--bg);color:var(--ink)}
+.nav-item.on{background:var(--green-50);color:var(--green-700);font-weight:600}
+.nav-item.on svg{color:var(--green-600)}
+.nav-item svg{color:var(--muted)}
+.nav-item .count{margin-left:auto;font-size:11px;font-weight:600;color:var(--muted-2);background:var(--bg);border-radius:20px;padding:1px 7px}
+.nav-item.on .count{background:#fff;color:var(--green-700)}
+.sb-foot{border-top:1px solid var(--line-2);padding:8px;display:flex;flex-direction:column;gap:2px}
+.me{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px}
+.me:hover{background:var(--bg)}
+.avatar{width:30px;height:30px;border-radius:50%;background:var(--green-600);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:600;flex:none}
+.me .nm{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.me .rl{font-size:11px;color:var(--muted-2)}
+.app.collapsed .hide-c{display:none!important}
+.app.collapsed .nav-item,.app.collapsed .me{justify-content:center;padding:10px}
+.app.collapsed .sb-head{justify-content:center;padding:18px 8px}
+.app.collapsed .sb-toggle{display:none}
+.app.collapsed .nav-item:hover::after{
+  content:attr(data-tip);position:absolute;left:calc(100% + 10px);top:50%;transform:translateY(-50%);
+  background:#12181d;color:#fff;font-size:12px;font-weight:500;padding:5px 9px;border-radius:7px;white-space:nowrap;z-index:99;box-shadow:var(--shadow)
+}
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{height:64px;flex:none;background:rgba(255,255,255,.82);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;padding:0 24px;position:sticky;top:0;z-index:40}
+.hamb{display:none;width:34px;height:34px;border:1px solid var(--line);background:#fff;border-radius:9px;place-items:center}
+.tb-search{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:0 10px;height:34px;width:300px;max-width:38vw;color:var(--muted)}
+.tb-search input{border:0;background:none;outline:0;width:100%;font-size:13px}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.chip-date{font-size:12.5px;color:var(--muted);border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 10px;display:flex;gap:7px;align-items:center}
+.icon-btn{width:34px;height:34px;border:1px solid var(--line);background:#fff;border-radius:9px;display:grid;place-items:center;color:var(--ink-2);position:relative;transition:.15s}
+.icon-btn:hover{background:var(--bg)}
+.dot{position:absolute;top:6px;right:7px;width:7px;height:7px;background:#c9402f;border-radius:50%;border:2px solid #fff}
+.page{padding:26px 24px 56px;max-width:1440px;width:100%;margin:0 auto}
+
+/* ---------- primitives ---------- */
+.h1{font-size:21px;font-weight:700;letter-spacing:-.022em;margin:0}
+.sub{color:var(--muted);margin:3px 0 0;font-size:13.5px}
+.phead{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+.phead .acts{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 13px;border-radius:9px;border:1px solid var(--line);background:#fff;font-weight:600;font-size:13px;color:var(--ink-2);transition:.15s;box-shadow:var(--shadow-sm)}
+.btn:hover{background:var(--bg)}
+.btn.pri{background:var(--green-600);border-color:var(--green-600);color:#fff}
+.btn.pri:hover{background:var(--green-700)}
+.btn.ghost{border-color:transparent;box-shadow:none;background:none;color:var(--muted)}
+.btn.ghost:hover{background:var(--bg);color:var(--ink)}
+.btn.sm{height:30px;padding:0 10px;font-size:12.5px}
+.btn.danger{color:var(--red-600);border-color:#f0d8d6}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow-sm)}
+.card-h{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line-2)}
+.card-h h3{margin:0;font-size:14px;font-weight:650;letter-spacing:-.01em}
+.card-h .r{margin-left:auto;display:flex;gap:6px;align-items:center}
+.card-b{padding:16px}
+.grid{display:grid;gap:14px}
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:20px;border:1px solid transparent;white-space:nowrap}
+.badge i{width:6px;height:6px;border-radius:50%;background:currentColor;display:block}
+.b-active{background:var(--green-50);color:var(--green-700);border-color:#cfe6d6}
+.b-attention{background:var(--amber-50);color:var(--amber-600);border-color:#f0e2c1}
+.b-completed{background:var(--blue-50);color:var(--blue-600);border-color:#d8e3f4}
+.b-pending{background:#f2f3f2;color:#5d6771;border-color:#e2e5e2}
+.b-neutral{background:#f2f3f2;color:#5d6771;border-color:#e2e5e2}
+.b-yes{background:var(--green-50);color:var(--green-700);border-color:#cfe6d6}
+.b-no{background:var(--red-50);color:var(--red-600);border-color:#f2dad8}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:640px}
+th{font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted-2);font-weight:600;text-align:left;padding:10px 16px;background:#fcfdfc;border-bottom:1px solid var(--line-2);white-space:nowrap}
+td{padding:12px 16px;border-bottom:1px solid var(--line-2);vertical-align:middle}
+tbody tr:last-child td{border-bottom:0}
+tr.click{cursor:pointer;transition:background .12s}
+tr.click:hover{background:#fafbfa}
+tr.click:hover .lk{color:var(--green-700)}
+.lk{font-weight:600;color:var(--ink)}
+.t2{font-size:12px;color:var(--muted-2)}
+.mono{font-variant-numeric:tabular-nums}
+.crumb{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);margin-bottom:12px;flex-wrap:wrap}
+.crumb b{color:var(--ink-2);font-weight:600}
+.crumb button{border:0;background:none;padding:0;color:var(--muted);font-weight:500}
+.crumb button:hover{color:var(--green-700);text-decoration:underline}
+.empty{text-align:center;padding:44px 20px;color:var(--muted)}
+.empty h4{margin:10px 0 4px;color:var(--ink);font-size:14px}
+.kv{display:grid;grid-template-columns:150px 1fr;gap:2px 14px}
+.kv .k{color:var(--muted);font-size:12.5px;padding:7px 0}
+.kv .v{font-weight:550;padding:7px 0;font-size:13.5px}
+.kv>div{border-bottom:1px dashed var(--line-2)}
+.kv>div:last-child,.kv>div:nth-last-child(2){border-bottom:0}
+.sec-title{font-size:11px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:var(--muted-2)}
+.spin{width:15px;height:15px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.skl{background:linear-gradient(90deg,#eef0ee,#f7f8f7,#eef0ee);background-size:200% 100%;animation:sh 1.1s infinite;border-radius:8px}
+@keyframes sh{to{background-position:-200% 0}}
+
+/* KPI */
+.kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:13px 14px;box-shadow:var(--shadow-sm);transition:.16s}
+.kpi:hover{box-shadow:var(--shadow);transform:translateY(-1px)}
+.kpi .top{display:flex;align-items:center;gap:8px;color:var(--muted-2)}
+.kpi .top span{font-size:11px;font-weight:650;letter-spacing:.05em;text-transform:uppercase}
+.kpi .n{font-size:25px;font-weight:700;letter-spacing:-.03em;margin:8px 0 2px;line-height:1}
+.kpi .d{font-size:11.5px;color:var(--muted)}
+.kpi .up{color:var(--green-600);font-weight:600}
+.kpi .warn{color:var(--amber-600);font-weight:600}
+
+/* summary strip */
+.sumgrid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
+.sum{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:11px 13px;box-shadow:var(--shadow-sm)}
+.sum .l{font-size:10.5px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:var(--muted-2)}
+.sum .v{font-weight:650;margin-top:5px;font-size:14px;display:flex;align-items:center;gap:6px}
+
+/* timeline */
+.tl{position:relative;padding-left:8px}
+.tl-day{font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted-2);margin:0 0 8px 26px}
+.tl-item{position:relative;padding:0 0 16px 26px}
+.tl-item::before{content:"";position:absolute;left:5px;top:16px;bottom:0;width:1px;background:var(--line)}
+.tl-item:last-child::before{display:none}
+.tl-item .pt{position:absolute;left:0;top:5px;width:11px;height:11px;border-radius:50%;background:#fff;border:2.5px solid var(--green-500)}
+.tl-item.g .pt{border-color:var(--muted-2)}
+.tl-item.a .pt{border-color:var(--amber-500)}
+.tl-t{font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tl-d{color:var(--muted);font-size:13px;margin-top:2px}
+.tl-m{font-size:12px;color:var(--muted-2);margin-top:4px;display:flex;gap:10px;flex-wrap:wrap}
+
+/* donut + bars */
+.donut{width:132px;height:132px;border-radius:50%;flex:none;display:grid;place-items:center;position:relative}
+.donut::after{content:"";position:absolute;inset:17px;background:#fff;border-radius:50%}
+.donut .in{position:relative;z-index:1;text-align:center}
+.donut .in b{display:block;font-size:22px;letter-spacing:-.03em}
+.donut .in span{font-size:10.5px;color:var(--muted-2);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.legend{display:flex;flex-direction:column;gap:9px;flex:1;min-width:150px}
+.lg{display:flex;align-items:center;gap:9px;font-size:13px}
+.lg i{width:9px;height:9px;border-radius:3px;flex:none}
+.lg b{margin-left:auto;font-variant-numeric:tabular-nums}
+.lg span.p{color:var(--muted-2);font-size:12px;width:38px;text-align:right}
+.bar{height:6px;border-radius:20px;background:var(--line-2);overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--green-500);border-radius:20px;transition:width .5s}
+
+/* fertigation */
+.fert{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px}
+.fcell{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:#fff;transition:.15s}
+.fcell:hover{box-shadow:var(--shadow-sm)}
+.fcell .no{font-size:10.5px;font-weight:700;color:var(--muted-2);display:flex;align-items:center;gap:5px}
+.fcell .dt{font-size:12px;font-weight:600;margin-top:3px}
+.fcell.done{background:var(--green-50);border-color:#cfe6d6}
+.fcell.done .no{color:var(--green-700)}
+.fcell.next{border-color:var(--amber-500);background:var(--amber-50)}
+.fcell.next .no{color:var(--amber-600)}
+.fcell.wait{background:#fbfcfb}
+.fcell.wait .dt{color:var(--muted-2);font-weight:500}
+
+/* drawer / modal */
+.scrim{position:fixed;inset:0;background:rgba(18,24,29,.34);opacity:0;pointer-events:none;transition:opacity .2s;z-index:80;backdrop-filter:blur(1.5px)}
+.scrim.on{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;height:100%;width:min(500px,100%);background:#fff;z-index:90;transform:translateX(102%);transition:transform .26s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;box-shadow:var(--shadow-lg)}
+.drawer.on{transform:none}
+.dr-h{padding:18px 20px;border-bottom:1px solid var(--line-2);display:flex;align-items:flex-start;gap:12px}
+.dr-h h3{margin:0;font-size:16px;letter-spacing:-.02em}
+.dr-h p{margin:2px 0 0;color:var(--muted);font-size:12.5px}
+.dr-b{padding:18px 20px;overflow-y:auto;flex:1}
+.dr-f{padding:14px 20px;border-top:1px solid var(--line-2);display:flex;gap:8px;justify-content:flex-end;background:#fcfdfc}
+.fs{margin-bottom:20px}
+.fs>.sec-title{display:block;margin-bottom:10px}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.f{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.f label{font-size:12px;font-weight:600;color:var(--ink-2)}
+.f .req{color:#c9402f}
+.f input,.f select,.f textarea{height:36px;border:1px solid var(--line);border-radius:9px;padding:0 10px;background:#fff;outline:0;transition:.15s;font-size:13.5px;width:100%}
+.f textarea{height:72px;padding:8px 10px;resize:vertical}
+.f input:focus,.f select:focus,.f textarea:focus{border-color:var(--green-500);box-shadow:0 0 0 3px rgba(47,125,71,.13)}
+.f .hint{font-size:11.5px;color:var(--muted-2)}
+.f.err input,.f.err select{border-color:#d8564a;box-shadow:0 0 0 3px rgba(216,86,74,.12)}
+.preview{background:var(--green-50);border:1px solid #cfe6d6;border-radius:var(--r);padding:12px 14px}
+.preview .t{font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--green-700)}
+.preview .row{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:5px 0;border-bottom:1px dashed #cfe6d6}
+.preview .row:last-child{border-bottom:0}
+.preview .row b{font-weight:650}
+.modal{position:fixed;z-index:90;left:50%;top:50%;transform:translate(-50%,-46%) scale(.97);opacity:0;pointer-events:none;width:min(440px,calc(100% - 32px));background:#fff;border-radius:var(--r-lg);box-shadow:var(--shadow-lg);transition:.2s}
+.modal.on{opacity:1;pointer-events:auto;transform:translate(-50%,-50%)}
+.toasts{position:fixed;bottom:20px;right:20px;z-index:120;display:flex;flex-direction:column;gap:8px}
+.toast{background:#12181d;color:#fff;border-radius:11px;padding:11px 14px;display:flex;gap:10px;align-items:center;font-size:13px;font-weight:500;box-shadow:var(--shadow-lg);animation:tin .22s ease-out;max-width:340px}
+.toast .ic{width:18px;height:18px;border-radius:50%;background:var(--green-500);display:grid;place-items:center;flex:none}
+.toast.warn .ic{background:var(--amber-500)}
+@keyframes tin{from{opacity:0;transform:translateY(8px)}}
+.filters{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.fsearch{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:9px;height:36px;padding:0 11px;min-width:280px;flex:1;max-width:400px;color:var(--muted);box-shadow:var(--shadow-sm)}
+.fsearch input{border:0;background:none;outline:0;width:100%;font-size:13.5px}
+select.fsel{height:36px;border:1px solid var(--line);border-radius:9px;background:#fff;padding:0 30px 0 11px;font-size:13px;font-weight:550;color:var(--ink-2);box-shadow:var(--shadow-sm);appearance:none;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7681' stroke-width='2.2'><path d='M6 9l6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 8px center}
+select.fsel.act{border-color:#cfe6d6;background-color:var(--green-50);color:var(--green-700)}
+.rescount{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);margin-bottom:10px}
+.rescount b{color:var(--ink)}
+.two{display:grid;grid-template-columns:1.55fr 1fr;gap:14px;align-items:start}
+.two-eq{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+.stack{display:flex;flex-direction:column;gap:14px}
+.exp .card-h{cursor:pointer}
+.exp .card-b{display:none}
+.exp.open .card-b{display:block}
+.exp .chev{transition:transform .18s;color:var(--muted)}
+.exp.open .chev{transform:rotate(180deg)}
+.pill{display:inline-flex;gap:6px;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:20px;padding:3px 9px;font-size:12px;color:var(--ink-2);font-weight:550}
+.people{display:flex;flex-direction:column;gap:2px}
+.person{display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px}
+.person:hover{background:#fafbfa}
+.person .nm{font-weight:600;font-size:13px}
+.hero{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.hero .t .h1{font-size:24px}
+.hero-meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;color:var(--muted);font-size:13px}
+.big-av{width:52px;height:52px;border-radius:14px;background:linear-gradient(150deg,var(--green-500),var(--green-700));color:#fff;display:grid;place-items:center;font-weight:700;font-size:18px;flex:none}
+@media(max-width:1180px){.kpis{grid-template-columns:repeat(3,1fr)}.sumgrid{grid-template-columns:repeat(3,1fr)}.two,.two-eq{grid-template-columns:1fr}}
+@media(max-width:900px){
+  .sidebar{position:fixed;left:0;top:0;transform:translateX(-102%);transition:transform .24s;box-shadow:var(--shadow-lg)}
+  .app.drawer-open .sidebar{transform:none}
+  .app.collapsed .sidebar{--sb:248px}
+  .app.collapsed .hide-c{display:block!important}
+  .app.collapsed .nav-item,.app.collapsed .me{justify-content:flex-start;padding:9px 10px}
+  .hamb{display:grid}
+  .page{padding:18px 14px 48px}
+  .topbar{padding:0 14px}
+  .tb-search{display:none}
+  .frow{grid-template-columns:1fr}
+  .kv{grid-template-columns:1fr;gap:0}
+  .kv>div{border-bottom:0}
+  .kv .k{padding-bottom:0}
+  .kv .v{padding-top:2px;border-bottom:1px dashed var(--line-2);padding-bottom:8px}
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .sumgrid{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <aside class="sidebar">
+    <div class="sb-head">
+      <div class="logo">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 21c0-6 3-10 8-11-1 6-4 9-8 11Z"/><path d="M12 21C8 19 5 15 4 9c5 1 8 5 8 12Z"/></svg>
+      </div>
+      <div class="brand hide-c">AgriTrack<small>Farm Operations</small></div>
+      <button class="sb-toggle" id="collapseBtn" title="Collapse sidebar">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg>
+      </button>
+    </div>
+    <nav class="nav" id="nav"></nav>
+    <div class="sb-foot">
+      <button class="nav-item" data-tip="Settings" data-nav="settings">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2V21a2 2 0 1 1-4 0v-.1A1.7 1.7 0 0 0 7 19.4a1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 3 15a1.7 1.7 0 0 0-1.6-1H1a2 2 0 1 1 0-4h.4A1.7 1.7 0 0 0 3 9a1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.7 1.7 0 0 0 9 3.4V3a2 2 0 1 1 4 0v.4A1.7 1.7 0 0 0 15 4.6a1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9v0c.3.6.9 1 1.6 1h.4a2 2 0 1 1 0 4H21a1.7 1.7 0 0 0-1.6 1Z"/></svg>
+        <span class="hide-c">Settings</span>
+      </button>
+      <button class="nav-item" data-tip="Log out" id="logoutBtn">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>
+        <span class="hide-c">Log out</span>
+      </button>
+      <div class="me">
+        <div class="avatar">AD</div>
+        <div class="hide-c" style="min-width:0">
+          <div class="nm">Admin</div>
+          <div class="rl">Full access</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <button class="hamb" id="hambBtn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <div class="tb-search">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="globalSearch" placeholder="Search farms, owners, villages…" />
+      </div>
+      <div class="tb-right">
+        <div class="chip-date">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 11h18"/></svg>
+          <span id="todayChip"></span>
+        </div>
+        <button class="icon-btn" id="notifBtn" title="Notifications">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+          <span class="dot"></span>
+        </button>
+        <div class="avatar" title="Admin">AD</div>
+      </div>
+    </header>
+    <main class="page" id="view"></main>
+  </div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer"></aside>
+<div class="modal" id="modal"></div>
+<div class="toasts" id="toasts"></div>
+
+<script>
+/* =====================================================================
+   AgriTrack POC — data, state, views. All client-side.
+   ===================================================================== */
+const IC = {
+  dash:'<path d="M3 13h8V3H3zM13 21h8V11h-8zM13 3v6h8V3zM3 21h8v-6H3z"/>',
+  region:'<path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11Z"/><circle cx="12" cy="10" r="2.6"/>',
+  farm:'<path d="M3 21V10l9-6 9 6v11"/><path d="M9 21v-6h6v6"/>',
+  owner:'<path d="M20 21a8 8 0 1 0-16 0"/><circle cx="12" cy="8" r="4"/>',
+  sup:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1A4 4 0 0 1 16 11"/>',
+  act:'<path d="M12 8v4l3 2"/><circle cx="12" cy="12" r="9"/>',
+  chev:'<path d="M9 18l6-6-6-6"/>',
+  down:'<path d="M6 9l6 6 6-6"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  check:'<path d="M20 6 9 17l-5-5"/>',
+  search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+  drop:'<path d="M12 3s6 6.5 6 10.5A6 6 0 0 1 6 13.5C6 9.5 12 3 12 3Z"/>',
+  leaf:'<path d="M11 20A7 7 0 0 1 4 13c0-5 6-9 10-10 0 6-2 11-3 17Z"/><path d="M4 13c4 0 7 3 7 7"/>',
+  x:'<path d="M18 6 6 18M6 6l12 12"/>',
+  cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 11h18"/>',
+  alert:'<path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 2 18a2 2 0 0 0 1.7 3h16.6A2 2 0 0 0 22 18L13.7 3.9a2 2 0 0 0-3.4 0Z"/>',
+  arrow:'<path d="M5 12h14M13 6l6 6-6 6"/>',
+  back:'<path d="M19 12H5M11 18l-6-6 6-6"/>',
+  pin:'<path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11Z"/>',
+  phone:'<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2Z"/>',
+  tool:'<path d="M14.7 6.3a4 4 0 0 0 5 5l-9 9a2.8 2.8 0 0 1-4-4Z"/><path d="m14.7 6.3 3-3 3 3-3 3"/>',
+  money:'<path d="M12 2v20"/><path d="M17 6H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>',
+  users:'<path d="M17 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9.5" cy="7" r="4"/>',
+  file:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/>'
+};
+const svg = (p,s=17,w=1.9)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const NOW = new Date('2026-01-25T10:30:00');
+const d2s = d => d? `${String(d.getDate()).padStart(2,'0')} ${MON[d.getMonth()]} ${d.getFullYear()}` : '—';
+const iso2s = s => s? d2s(new Date(s+'T00:00:00')) : '—';
+const inr = n => '₹'+Number(n).toLocaleString('en-IN');
+const initials = n => n.split(' ').filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase();
+
+/* ---------------- data ---------------- */
+const REGIONS = [
+  {id:'ath',name:'Athner',code:'ATH-01',district:'Betul, Madhya Pradesh',status:'Active'},
+  {id:'bet',name:'Betul',code:'BET-02',district:'Betul, Madhya Pradesh',status:'Active'},
+  {id:'mul',name:'Multai',code:'MUL-03',district:'Betul, Madhya Pradesh',status:'Active'}
+];
+const SUPERVISORS = [
+  {id:'s1',name:'Mohit Dhote',region:'Athner',role:'Circle Supervisor',mobile:'9822014455',status:'Active',since:'2023-04-11'},
+  {id:'s2',name:'Sandeep Sharma',region:'Athner',role:'Circle Supervisor',mobile:'9822066712',status:'Active',since:'2024-01-08'},
+  {id:'s3',name:'Vijay More',region:'Athner',role:'Field Supervisor',mobile:'9860112277',status:'Active',since:'2024-06-21'},
+  {id:'s4',name:'Rajesh Pawar',region:'Betul',role:'Circle Supervisor',mobile:'9765431122',status:'Active',since:'2022-11-02'},
+  {id:'s5',name:'Pooja Kale',region:'Betul',role:'Field Supervisor',mobile:'9730884411',status:'Active',since:'2025-02-17'},
+  {id:'s6',name:'Amit Chavan',region:'Multai',role:'Circle Supervisor',mobile:'9922556677',status:'Active',since:'2023-08-30'},
+  {id:'s7',name:'Nitin Joshi',region:'Multai',role:'Field Supervisor',mobile:'9011223344',status:'On leave',since:'2025-05-05'}
+];
+const ZONAL={Athner:'Sandeep Choudhary',Betul:'Prakash Mundhe',Multai:'Girish Deshmukh'};
+const DEVTEAM={Athner:'Abhijit Patil',Betul:'Kunal Shirke',Multai:'Rohit Bansod'};
+const DEVIC={Athner:'Suyash Dumbre',Betul:'Suyash Dumbre',Multai:'Harshad Kale'};
+
+const SEED = [
+  ['Chindhya Ganoba Gawande',5755,'Athner','Gouna',1,'Mohit Dhote','active','Plant'],
+  ['Ramesh Patil',5762,'Athner','Kelha',2.5,'Mohit Dhote','active','Plant'],
+  ['Sunita Verma',5801,'Betul','Bhainsdehi',1.8,'Rajesh Pawar','active','Ratoon'],
+  ['Devidas Kawadu Ingle',5768,'Athner','Gouna',1.5,'Mohit Dhote','attention','Plant'],
+  ['Anita Wankhede',5771,'Athner','Sawalmenda',2,'Sandeep Sharma','active','Plant'],
+  ['Gajanan Rathod',5776,'Athner','Kelha',3,'Sandeep Sharma','completed','Ratoon'],
+  ['Shalini Deshmukh',5779,'Athner','Jamthi',1.2,'Vijay More','active','Plant'],
+  ['Prakash Bhilawe',5783,'Athner','Gouna',2.2,'Vijay More','pending','Plant'],
+  ['Nandkishor Sarode',5787,'Athner','Sawalmenda',1,'Mohit Dhote','active','Plant'],
+  ['Kailash Uike',5792,'Athner','Jamthi',1.6,'Mohit Dhote','attention','Ratoon'],
+  ['Ramesh Patil',5795,'Athner','Kelha',1.4,'Sandeep Sharma','active','Plant'],
+  ['Vandana Bhoyar',5806,'Betul','Bhainsdehi',2.8,'Rajesh Pawar','active','Plant'],
+  ['Sudhir Chikhalkar',5811,'Betul','Ranipur',1.1,'Rajesh Pawar','active','Plant'],
+  ['Manoj Kumar Yadav',5815,'Betul','Sapna',2.4,'Rajesh Pawar','attention','Ratoon'],
+  ['Rekha Tayde',5818,'Betul','Ranipur',1.7,'Pooja Kale','active','Plant'],
+  ['Ashok Nagle',5822,'Betul','Sapna',3.2,'Pooja Kale','completed','Ratoon'],
+  ['Sunita Verma',5826,'Betul','Bhainsdehi',1,'Pooja Kale','pending','Plant'],
+  ['Dinesh Sable',5830,'Betul','Chicholi',2,'Rajesh Pawar','active','Plant'],
+  ['Harshal Wagh',5834,'Betul','Chicholi',1.3,'Pooja Kale','active','Plant'],
+  ['Bhagwan Tekam',5840,'Betul','Sapna',2.6,'Rajesh Pawar','active','Ratoon'],
+  ['Yogesh Barskar',5852,'Multai','Prabhat Pattan',1.9,'Amit Chavan','active','Plant'],
+  ['Snehal Kalbhor',5856,'Multai','Masod',1.5,'Amit Chavan','active','Plant'],
+  ['Ravindra Ghodeswar',5861,'Multai','Prabhat Pattan',2.1,'Amit Chavan','attention','Ratoon'],
+  ['Laxman Deshmukh',5865,'Multai','Sirdi',1.2,'Nitin Joshi','active','Plant'],
+  ['Meena Pardhi',5869,'Multai','Masod',2.7,'Nitin Joshi','active','Plant'],
+  ['Sanjay Kokate',5873,'Multai','Sirdi',1.6,'Amit Chavan','completed','Ratoon'],
+  ['Pravin Awchar',5877,'Multai','Prabhat Pattan',1,'Nitin Joshi','pending','Plant']
+];
+const SEEDS_DETAIL=['D.E.B.','Co-86032','VSI-434','MS-10001','Co-265'];
+const COMPANIES=['JAIN','NETAFIM','FINOLEX','JAIN'];
+const ACT_TYPES=['Farm Visit','Sowing','Fertigation','Weedicide','Drenching','Earthing Up','Drip Installation','Inspection','Other'];
+const ACT_DESC={
+  'Farm Visit':['Routine field visit completed','Electricity fault found at pump house','Crop growth satisfactory, no pest observed'],
+  'Sowing':['Sowing completed as per plan','Sowing completed, spacing 5 ft'],
+  'Fertigation':['First fertigation completed','Fertigation round completed with NPK 19:19:19','Fertigation done along with micronutrients'],
+  'Weedicide':['Weedicide spray completed','Post-emergence weedicide applied'],
+  'Drenching':['Drenching completed','Drenching done for root establishment'],
+  'Earthing Up':['Lite earthing up completed','Medium earthing up in progress'],
+  'Drip Installation':['Drip laterals installed and pressure tested','Drip material delivered and installed'],
+  'Inspection':['Farm inspection completed','Zonal inspection completed, records verified'],
+  'Other':['Farmer training on fertigation schedule','Soil sample collected for testing']
+};
+let ACT_ID=1, seedN=7;
+const rnd=()=>{seedN=(seedN*9301+49297)%233280;return seedN/233280;};
+const pick=a=>a[Math.floor(rnd()*a.length)];
+const addDays=(iso,n)=>{const d=new Date(iso+'T00:00:00');d.setDate(d.getDate()+n);return d.toISOString().slice(0,10);};
+
+let FARMS = SEED.map((r,i)=>{
+  const [name,code,region,village,area,sup,status,crop]=r;
+  const survey = addDays('2025-10-01', (i*4)%40);
+  const sowing = addDays('2025-12-05', (i*5)%45);
+  const installed = status!=='pending';
+  const f = {
+    id:'f'+code, name:name+(SEED.filter(x=>x[0]===name).length>1?'':''), displayName:name, code:String(code),
+    owner:name, mobile:'9'+String(165131488+i*37117).slice(0,9), region, village, area, crop,
+    supervisor:sup, zonal:ZONAL[region], devTeam:DEVTEAM[region], devIncharge:DEVIC[region],
+    status, address:`Survey No. ${120+i}, ${village}, Tehsil ${region}, Dist. Betul (M.P.) 460001`,
+    dripSurveyDate:survey, dripCompany:COMPANIES[i%COMPANIES.length], quotation:Math.round((95000+area*32000+i*1750)/1)*1,
+    agreement:'YES', poToCompany: installed?'YES':'YES', dripDelivered: installed?'YES':'NO', dripInstalled: installed?'YES':'NO',
+    plough: installed?'YES':'NO', rowDistance:(i%3===0?'5 ft':i%3===1?'4.5 ft':'6 ft'), dairyPreparation: installed?'YES':'NO',
+    sowingDate: status==='pending'?null:sowing, seedDetails:SEEDS_DETAIL[i%SEEDS_DETAIL.length],
+    seedTreatment: status==='pending'?'NO':'YES', basalDose: status==='pending'?'NO':'YES',
+    drenching: status==='pending'?'NO':'YES', weedicide: (status==='pending'||i%7===3)?'NO':'YES',
+    liteEarthing: status==='pending'?null:addDays(sowing,60), mediumEarthing: status==='pending'?null:addDays(sowing,118),
+    heavyEarthing: status==='pending'?null:addDays(sowing,149),
+    soilType:['Medium black','Deep black','Shallow black'][i%3], waterSource:['Bore well','Open well','Canal'][i%3],
+    plantsPerAcre: 8000+ (i%4)*250, expectedYield: (area*48+ (i%5)*3).toFixed(1)+' MT',
+    fert:[], activities:[]
+  };
+  // fertigation: 24 rounds
+  const total=24; const done = status==='pending'?0: status==='completed'?24: 4+Math.floor(rnd()*10);
+  for(let k=0;k<total;k++){
+    f.fert.push({no:k+1, date: f.sowingDate? addDays(f.sowingDate,12+k*14): null, done:k<done, dose:['NPK 19:19:19','Urea + SOP','12:61:00','00:52:34','Micronutrient mix'][k%5]});
+  }
+  // activities
+  const n = status==='pending'?2:4+Math.floor(rnd()*4);
+  for(let k=0;k<n;k++){
+    const t = k===0?'Fertigation': pick(ACT_TYPES);
+    const off = k===0? -(i%3) : -(3+k*7+(i%5));
+    const d = new Date(NOW); d.setDate(d.getDate()+off);
+    f.activities.push({
+      id:'a'+(ACT_ID++), farmId:f.id, type:t, desc:pick(ACT_DESC[t]),
+      date:d.toISOString().slice(0,10), time:['10:30 AM','04:10 PM','09:15 AM','01:45 PM','11:20 AM'][k%5],
+      by:f.supervisor
+    });
+  }
+  f.activities.sort((a,b)=> a.date<b.date?1:-1);
+  return f;
+});
+
+/* derived */
+const byRegion = r => FARMS.filter(f=>f.region===r);
+const supObj = n => SUPERVISORS.find(s=>s.name===n);
+const farmById = id => FARMS.find(f=>f.id===id);
+const allActs = () => FARMS.flatMap(f=>f.activities.map(a=>({...a,farm:f}))).sort((x,y)=> x.date<y.date?1: x.date>y.date?-1: 0);
+const lastAct = f => f.activities[0] ? f.activities[0].date : null;
+function owners(){
+  const m=new Map();
+  FARMS.forEach(f=>{
+    const k=f.owner+'|'+f.region;
+    if(!m.has(k)) m.set(k,{id:'o'+k.replace(/\W/g,''),name:f.owner,mobile:f.mobile,region:f.region,village:f.village,farms:[]});
+    m.get(k).farms.push(f);
+  });
+  return [...m.values()];
+}
+const ownerById = id => owners().find(o=>o.id===id);
+const STLABEL={active:'Active',attention:'Needs Attention',completed:'Completed',pending:'Pending'};
+const stBadge = s => `<span class="badge b-${s}"><i></i>${STLABEL[s]}</span>`;
+const ynBadge = v => v==='YES'? `<span class="badge b-yes">Yes</span>` : `<span class="badge b-no">No</span>`;
+
+/* ---------------- state / shell ---------------- */
+const app=document.getElementById('app'), view=document.getElementById('view');
+let route={page:'dashboard'};
+let farmFilter={q:'',region:'',sup:'',status:''};
+let logFilter={q:'',region:'',sup:'',type:'',date:''};
+let regionQ='';
+
+const NAVITEMS=[
+  ['dashboard','Dashboard',IC.dash],
+  ['regions','Regions',IC.region],
+  ['farms','Farms',IC.farm],
+  ['owners','Farm Owners',IC.owner],
+  ['supervisors','Supervisors',IC.sup],
+  ['logs','Activity Logs',IC.act]
+];
+function renderNav(){
+  const counts={regions:REGIONS.length,farms:FARMS.length,owners:owners().length,supervisors:SUPERVISORS.length};
+  document.getElementById('nav').innerHTML =
+   `<div class="nav-label hide-c">Operations</div>` +
+   NAVITEMS.map(([k,l,ic])=>`
+    <button class="nav-item ${route.page.startsWith(k.slice(0,5))&&groupOf(route.page)===k?'on':''}" data-nav="${k}" data-tip="${l}">
+      ${svg(ic)}<span class="hide-c">${l}</span>${counts[k]!=null?`<span class="count hide-c">${counts[k]}</span>`:''}
+    </button>`).join('');
+}
+function groupOf(p){
+  if(p==='dashboard')return 'dashboard';
+  if(p.startsWith('region'))return 'regions';
+  if(p.startsWith('farm'))return 'farms';
+  if(p.startsWith('owner'))return 'owners';
+  if(p.startsWith('sup'))return 'supervisors';
+  if(p==='logs')return 'logs';
+  return '';
+}
+function go(page,arg){
+  route={page,arg};
+  renderNav(); render();
+  app.classList.remove('drawer-open');
+  window.scrollTo({top:0,behavior:'instant'});
+}
+document.getElementById('collapseBtn').onclick=()=>app.classList.toggle('collapsed');
+document.getElementById('hambBtn').onclick=()=>app.classList.toggle('drawer-open');
+document.getElementById('logoutBtn').onclick=()=>confirmDialog('Log out of AgriTrack?','You will be returned to the sign-in screen. This is a demo, so nothing is lost.','Log out',()=>toast('Signed out (demo)'));
+document.getElementById('notifBtn').onclick=()=>{
+  openDrawer({title:'Notifications',sub:'3 unread updates from the field',body:`
+    <div class="stack">
+      ${[['Fertigation completed','Mohit Dhote · Chindhya Ganoba Gawande','Today 10:30 AM'],
+         ['Electricity fault reported','Vijay More · Prakash Bhilawe','Yesterday 4:10 PM'],
+         ['2 farms need attention in Betul','Rajesh Pawar','23 Jan 2026']]
+        .map(([t,s,d])=>`<div class="card"><div class="card-b" style="padding:13px 14px">
+          <div style="font-weight:600">${t}</div><div class="t2" style="margin-top:3px">${s}</div>
+          <div class="t2" style="margin-top:6px;color:var(--muted-2)">${d}</div></div></div>`).join('')}
+    </div>`,footer:`<button class="btn ghost" data-close>Close</button><button class="btn pri" data-act="readall">Mark all read</button>`});
+};
+document.getElementById('globalSearch').addEventListener('keydown',e=>{
+  if(e.key==='Enter'){farmFilter={q:e.target.value,region:'',sup:'',status:''};go('farms');}
+});
+document.getElementById('todayChip').textContent=d2s(NOW);
+
+/* ---------------- toasts / dialogs ---------------- */
+function toast(msg,warn){
+  const t=document.createElement('div');
+  t.className='toast'+(warn?' warn':'');
+  t.innerHTML=`<span class="ic">${svg(warn?IC.alert:IC.check,11,3)}</span><span>${esc(msg)}</span>`;
+  document.getElementById('toasts').appendChild(t);
+  setTimeout(()=>{t.style.opacity=0;t.style.transform='translateY(6px)';t.style.transition='.2s';setTimeout(()=>t.remove(),220);},2600);
+}
+const scrim=document.getElementById('scrim'), drawerEl=document.getElementById('drawer'), modalEl=document.getElementById('modal');
+let drawerHooks={};
+function openDrawer({title,sub,body,footer,onMount,onSubmit}){
+  drawerEl.innerHTML=`
+    <div class="dr-h"><div><h3>${title}</h3>${sub?`<p>${sub}</p>`:''}</div>
+      <button class="icon-btn" data-close style="margin-left:auto">${svg(IC.x,15)}</button></div>
+    <div class="dr-b">${body}</div>
+    <div class="dr-f">${footer||''}</div>`;
+  drawerHooks={onSubmit};
+  scrim.classList.add('on'); drawerEl.classList.add('on');
+  if(onMount) onMount(drawerEl);
+}
+function closeOverlays(){
+  scrim.classList.remove('on'); drawerEl.classList.remove('on'); modalEl.classList.remove('on'); drawerHooks={};
+}
+scrim.onclick=closeOverlays;
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeOverlays();});
+function confirmDialog(title,text,cta,fn,danger){
+  modalEl.innerHTML=`<div style="padding:20px">
+      <h3 style="margin:0 0 6px;font-size:16px;letter-spacing:-.02em">${esc(title)}</h3>
+      <p style="margin:0;color:var(--muted);font-size:13.5px">${esc(text)}</p>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:18px">
+        <button class="btn" data-close>Cancel</button>
+        <button class="btn ${danger?'danger':'pri'}" data-confirm>${esc(cta)}</button>
+      </div></div>`;
+  scrim.classList.add('on'); modalEl.classList.add('on');
+  modalEl.querySelector('[data-confirm]').onclick=()=>{closeOverlays();fn&&fn();};
+}
+document.addEventListener('click',e=>{
+  const c=e.target.closest('[data-close]'); if(c){closeOverlays();return;}
+  const n=e.target.closest('[data-nav]');
+  if(n){const [p,a]=n.dataset.nav.split(':');go(p,a);return;}
+  const ex=e.target.closest('.exp .card-h'); if(ex){ex.closest('.exp').classList.toggle('open');return;}
+  const a=e.target.closest('[data-act]'); if(a){actions(a.dataset.act,a.dataset.arg,a);return;}
+});
+
+/* ---------------- shared blocks ---------------- */
+function kpi(label,n,detail,icon,tone){
+  return `<div class="kpi"><div class="top">${svg(icon,15)}<span>${label}</span></div>
+    <div class="n">${n}</div><div class="d ${tone||''}">${detail}</div></div>`;
+}
+function farmRows(list,cols){
+  if(!list.length) return '';
+  return list.map(f=>`<tr class="click" data-nav="farm:${f.id}">
+    <td><div class="lk">${esc(f.displayName)}</div><div class="t2">Farm #${f.code}</div></td>
+    ${cols.includes('owner')?`<td>${esc(f.owner)}<div class="t2">${esc(f.mobile)}</div></td>`:''}
+    ${cols.includes('region')?`<td>${esc(f.region)}</td>`:''}
+    ${cols.includes('village')?`<td>${esc(f.village)}</td>`:''}
+    ${cols.includes('area')?`<td class="mono">${f.area} Hac.</td>`:''}
+    ${cols.includes('sup')?`<td>${esc(f.supervisor)}</td>`:''}
+    <td>${stBadge(f.status)}</td>
+    ${cols.includes('last')?`<td class="t2 mono">${iso2s(lastAct(f))}</td>`:''}
+    ${cols.includes('actions')?`<td style="text-align:right;white-space:nowrap">
+      <button class="btn sm" data-act="addActivity" data-arg="${f.id}" onclick="event.stopPropagation()">Add activity</button>
+      <button class="btn sm" data-act="editFarm" data-arg="${f.id}" onclick="event.stopPropagation()">Edit</button></td>`:''}
+  </tr>`).join('');
+}
+function farmTable(list,cols,emptyMsg){
+  const head=['Farm',cols.includes('owner')&&'Owner',cols.includes('region')&&'Region',cols.includes('village')&&'Village',
+    cols.includes('area')&&'Area',cols.includes('sup')&&'Supervisor','Status',cols.includes('last')&&'Last Activity',
+    cols.includes('actions')&&'<span style="float:right">Actions</span>'].filter(Boolean);
+  if(!list.length) return emptyState(emptyMsg||'No farms match the current filters.');
+  return `<div class="tw"><table><thead><tr>${head.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
+    <tbody>${farmRows(list,cols)}</tbody></table></div>`;
+}
+function emptyState(msg,cta){
+  return `<div class="empty">${svg(IC.farm,26,1.6)}<h4>Nothing here yet</h4><p style="margin:0;font-size:13px">${esc(msg)}</p>
+   ${cta?`<div style="margin-top:14px">${cta}</div>`:''}</div>`;
+}
+function groupByDay(list){
+  const g=[];
+  list.forEach(a=>{
+    const label = dayLabel(a.date);
+    let last=g[g.length-1];
+    if(!last||last.label!==label){last={label,items:[]};g.push(last);}
+    last.items.push(a);
+  });
+  return g;
+}
+function dayLabel(iso){
+  const t=NOW.toISOString().slice(0,10);
+  const y=new Date(NOW); y.setDate(y.getDate()-1);
+  if(iso===t)return 'Today';
+  if(iso===y.toISOString().slice(0,10))return 'Yesterday';
+  return iso2s(iso);
+}
+const TONE={'Fertigation':'', 'Farm Visit':'a','Inspection':'a','Sowing':'','Drip Installation':'','Weedicide':'g','Drenching':'g','Earthing Up':'g','Other':'g'};
+function timeline(list,{withFarm=true}={}){
+  if(!list.length) return emptyState('No activity recorded yet.');
+  return `<div class="tl">`+groupByDay(list).map(g=>`
+    <div class="tl-day">${g.label}</div>
+    ${g.items.map(a=>`<div class="tl-item ${TONE[a.type]||''}"><span class="pt"></span>
+      <div class="tl-t">${esc(a.type)} <span class="t2 mono">${a.time}</span></div>
+      <div class="tl-d">${esc(a.desc)}</div>
+      <div class="tl-m">${withFarm&&a.farm?`<span>${svg(IC.farm,12)} <button class="btn ghost sm" style="height:auto;padding:0" data-nav="farm:${a.farm.id}">${esc(a.farm.displayName)}</button></span>`:''}
+        <span>Added by <b style="font-weight:600;color:var(--ink-2)">${esc(a.by)}</b></span>
+        <span>${iso2s(a.date)}</span></div></div>`).join('')}
+  `).join('')+`</div>`;
+}
+
+/* ---------------- views ---------------- */
+function render(){
+  const p=route.page;
+  if(p==='dashboard')return vDashboard();
+  if(p==='regions')return vRegions();
+  if(p==='regionDetail')return vRegionDetail(route.arg);
+  if(p==='farms')return vFarms();
+  if(p==='farm')return vFarm(route.arg);
+  if(p==='owners')return vOwners();
+  if(p==='owner')return vOwner(route.arg);
+  if(p==='supervisors')return vSupervisors();
+  if(p==='supervisor')return vSupervisor(route.arg);
+  if(p==='logs')return vLogs();
+  if(p==='settings')return vSettings();
+}
+
+function vDashboard(){
+  const active=FARMS.filter(f=>f.status==='active').length;
+  const att=FARMS.filter(f=>f.status==='attention').length;
+  const comp=FARMS.filter(f=>f.status==='completed').length;
+  const pend=FARMS.filter(f=>f.status==='pending').length;
+  const t=FARMS.length;
+  const seg=[['Active',active,'#2f7d47'],['Needs Attention',att,'#c98a1c'],['Completed',comp,'#2f5fa8'],['Pending',pend,'#98a2ae']];
+  let acc=0; const stops=seg.map(([l,v,c])=>{const a=acc/t*360; acc+=v; return `${c} ${a}deg ${acc/t*360}deg`;}).join(',');
+  const recent=allActs().slice(0,6);
+  view.innerHTML=`
+   <div class="phead">
+     <div><h1 class="h1">Good morning, Admin</h1><p class="sub">Here's what's happening across your farm operations.</p></div>
+     <div class="acts"><button class="btn" data-act="addRegion">${svg(IC.plus,14,2.2)} Add Region</button>
+       <button class="btn pri" data-act="addFarm">${svg(IC.plus,14,2.2)} Add Farm</button></div>
+   </div>
+   <div class="kpis">
+     ${kpi('Regions',REGIONS.length,'All operational',IC.region)}
+     ${kpi('Total Farms',t,'<span class="up">+5 this month</span>',IC.farm)}
+     ${kpi('Active Farms',active,'<span class="up">+3 this month</span>',IC.leaf)}
+     ${kpi('Farm Owners',owners().length,'Mapped to farms',IC.owner)}
+     ${kpi('Supervisors',SUPERVISORS.length,SUPERVISORS.filter(s=>s.status==='Active').length+' active today',IC.sup)}
+     ${kpi('Needs Attention',att,'<span class="warn">Review required</span>',IC.alert)}
+   </div>
+   <div class="two" style="margin-top:14px">
+     <div class="card">
+       <div class="card-h"><h3>Recent Activity</h3><div class="r"><button class="btn sm" data-nav="logs">View all ${svg(IC.arrow,13)}</button></div></div>
+       <div class="card-b">${timeline(recent)}</div>
+     </div>
+     <div class="stack">
+       <div class="card">
+         <div class="card-h"><h3>Farm Status</h3><div class="r t2">${t} farms</div></div>
+         <div class="card-b" style="display:flex;gap:18px;align-items:center;flex-wrap:wrap">
+           <div class="donut" style="background:conic-gradient(${stops})"><div class="in"><b>${Math.round(active/t*100)}%</b><span>Active</span></div></div>
+           <div class="legend">${seg.map(([l,v,c])=>`<div class="lg"><i style="background:${c}"></i>${l}<b>${v}</b><span class="p">${Math.round(v/t*100)}%</span></div>`).join('')}</div>
+         </div>
+       </div>
+       <div class="card">
+         <div class="card-h"><h3>Region Overview</h3><div class="r"><button class="btn sm" data-nav="regions">Manage</button></div></div>
+         <div class="tw"><table style="min-width:auto"><thead><tr><th>Region</th><th>Farms</th><th>Active</th><th>Attention</th><th></th></tr></thead>
+           <tbody>${REGIONS.map(r=>{const fl=byRegion(r.name);return `<tr class="click" data-nav="regionDetail:${r.id}">
+             <td><div class="lk">${r.name}</div><div class="t2">${r.code}</div></td>
+             <td class="mono">${fl.length}</td><td class="mono">${fl.filter(f=>f.status==='active').length}</td>
+             <td class="mono">${fl.filter(f=>f.status==='attention').length}</td>
+             <td style="text-align:right;color:var(--muted-2)">${svg(IC.chev,14)}</td></tr>`}).join('')}</tbody></table></div>
+       </div>
+     </div>
+   </div>`;
+}
+
+function vRegions(){
+  const list=REGIONS.filter(r=>(r.name+r.code).toLowerCase().includes(regionQ.toLowerCase()));
+  view.innerHTML=`
+   <div class="phead"><div><h1 class="h1">Regions</h1><p class="sub">Manage geographic areas and their farms.</p></div>
+     <div class="acts"><button class="btn pri" data-act="addRegion">${svg(IC.plus,14,2.2)} Add Region</button></div></div>
+   <div class="filters">
+     <div class="fsearch">${svg(IC.search,15)}<input id="rq" placeholder="Search regions…" value="${esc(regionQ)}"/></div>
+   </div>
+   <div class="card">
+    ${list.length?`<div class="tw"><table><thead><tr><th>Region</th><th>Code</th><th>Farms</th><th>Supervisors</th><th>Area</th><th>Status</th><th></th></tr></thead>
+     <tbody>${list.map(r=>{const fl=byRegion(r.name);const sl=SUPERVISORS.filter(s=>s.region===r.name);
+      return `<tr class="click" data-nav="regionDetail:${r.id}">
+        <td><div class="lk">${r.name}</div><div class="t2">${r.district}</div></td>
+        <td class="t2 mono">${r.code}</td><td>${fl.length} farms</td><td>${sl.length} supervisors</td>
+        <td class="mono">${fl.reduce((a,f)=>a+f.area,0).toFixed(1)} Hac.</td>
+        <td><span class="badge b-active"><i></i>Active</span></td>
+        <td style="text-align:right;color:var(--muted-2)">${svg(IC.chev,14)}</td></tr>`}).join('')}</tbody></table></div>`
+     : emptyState('No regions match “'+regionQ+'”.')}
+   </div>`;
+  const i=document.getElementById('rq'); i.oninput=e=>{regionQ=e.target.value;vRegions();document.getElementById('rq').focus();};
+}
+
+function vRegionDetail(id){
+  const r=REGIONS.find(x=>x.id===id)||REGIONS[0];
+  const fl=byRegion(r.name), sl=SUPERVISORS.filter(s=>s.region===r.name);
+  view.innerHTML=`
+   <div class="crumb"><button data-nav="regions">Regions</button>${svg(IC.chev,12)}<b>${r.name}</b></div>
+   <div class="phead hero">
+     <div class="big-av">${initials(r.name)}</div>
+     <div class="t"><h1 class="h1">${r.name}</h1>
+       <div class="hero-meta"><span class="pill">${r.code}</span><span>${svg(IC.pin,13)} ${r.district}</span><span class="badge b-active"><i></i>Active</span></div></div>
+     <div class="acts"><button class="btn" data-act="addSupervisor" data-arg="${r.name}">${svg(IC.plus,14,2.2)} Add Supervisor</button>
+       <button class="btn pri" data-act="addFarm" data-arg="${r.name}">${svg(IC.plus,14,2.2)} Add Farm</button></div>
+   </div>
+   <div class="sumgrid" style="margin-bottom:14px">
+     ${[['Farms',fl.length],['Active',fl.filter(f=>f.status==='active').length],['Needs attention',fl.filter(f=>f.status==='attention').length],
+        ['Supervisors',sl.length],['Total area',fl.reduce((a,f)=>a+f.area,0).toFixed(1)+' Hac.'],['Villages',new Set(fl.map(f=>f.village)).size]]
+       .map(([l,v])=>`<div class="sum"><div class="l">${l}</div><div class="v">${v}</div></div>`).join('')}
+   </div>
+   <div class="stack">
+     <div class="card"><div class="card-h"><h3>Farms in ${r.name}</h3><div class="r t2">${fl.length} farms</div></div>
+       ${farmTable(fl,['owner','village','area','sup','last'],'No farms added to this region yet.')}</div>
+     <div class="card"><div class="card-h"><h3>Supervisors in this region</h3></div>
+       <div class="tw"><table><thead><tr><th>Supervisor</th><th>Role</th><th>Assigned Farms</th><th>Active Farms</th><th>Last Activity</th><th>Status</th></tr></thead>
+       <tbody>${sl.map(s=>{const sf=FARMS.filter(f=>f.supervisor===s.name);const la=allActs().find(a=>a.by===s.name);
+        return `<tr class="click" data-nav="supervisor:${s.id}">
+          <td><div style="display:flex;gap:9px;align-items:center"><div class="avatar">${initials(s.name)}</div><div><div class="lk">${s.name}</div><div class="t2">${s.mobile}</div></div></div></td>
+          <td class="t2">${s.role}</td><td class="mono">${sf.length}</td><td class="mono">${sf.filter(f=>f.status==='active').length}</td>
+          <td class="t2 mono">${la?iso2s(la.date):'—'}</td>
+          <td><span class="badge ${s.status==='Active'?'b-active':'b-pending'}"><i></i>${s.status}</span></td></tr>`}).join('')}</tbody></table></div></div>
+   </div>`;
+}
+
+function filteredFarms(){
+  const q=farmFilter.q.trim().toLowerCase();
+  return FARMS.filter(f=>{
+    if(farmFilter.region && f.region!==farmFilter.region) return false;
+    if(farmFilter.sup && f.supervisor!==farmFilter.sup) return false;
+    if(farmFilter.status && f.status!==farmFilter.status) return false;
+    if(q && !(f.displayName+' '+f.owner+' '+f.village+' '+f.code+' '+f.region).toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+function vFarms(){
+  const list=filteredFarms();
+  const dirty=farmFilter.q||farmFilter.region||farmFilter.sup||farmFilter.status;
+  const sups=farmFilter.region? SUPERVISORS.filter(s=>s.region===farmFilter.region):SUPERVISORS;
+  view.innerHTML=`
+   <div class="phead"><div><h1 class="h1">Farms</h1><p class="sub">Manage farms, owners and supervisors.</p></div>
+     <div class="acts"><button class="btn pri" data-act="addFarm">${svg(IC.plus,14,2.2)} Add Farm</button></div></div>
+   <div class="filters">
+     <div class="fsearch">${svg(IC.search,15)}<input id="fq" placeholder="Search farms, owners or villages…" value="${esc(farmFilter.q)}"/></div>
+     <select class="fsel ${farmFilter.region?'act':''}" id="fr"><option value="">All Regions</option>${REGIONS.map(r=>`<option ${farmFilter.region===r.name?'selected':''}>${r.name}</option>`).join('')}</select>
+     <select class="fsel ${farmFilter.sup?'act':''}" id="fs"><option value="">All Supervisors</option>${sups.map(s=>`<option ${farmFilter.sup===s.name?'selected':''}>${s.name}</option>`).join('')}</select>
+     <select class="fsel ${farmFilter.status?'act':''}" id="fst"><option value="">All Status</option>${Object.entries(STLABEL).map(([k,v])=>`<option value="${k}" ${farmFilter.status===k?'selected':''}>${v}</option>`).join('')}</select>
+   </div>
+   <div class="rescount">
+     ${dirty?`<span>Showing <b>${list.length}</b> of <b>${FARMS.length}</b> farms</span>
+       <button class="btn ghost sm" id="clearF">${svg(IC.x,13)} Clear filters</button>`:`<span><b>${FARMS.length}</b> farms</span>`}
+     <span style="margin-left:auto" class="t2">${list.reduce((a,f)=>a+f.area,0).toFixed(1)} Hac. total</span>
+   </div>
+   <div class="card">${farmTable(list,['owner','region','village','area','sup','last','actions'],
+     'No farms match these filters. Try clearing them.')}</div>`;
+  const q=document.getElementById('fq');
+  q.oninput=e=>{farmFilter.q=e.target.value;vFarms();const n=document.getElementById('fq');n.focus();n.setSelectionRange(n.value.length,n.value.length);};
+  document.getElementById('fr').onchange=e=>{farmFilter.region=e.target.value;
+    if(farmFilter.sup && !SUPERVISORS.some(s=>s.name===farmFilter.sup&&(!farmFilter.region||s.region===farmFilter.region))) farmFilter.sup='';
+    vFarms();};
+  document.getElementById('fs').onchange=e=>{farmFilter.sup=e.target.value;vFarms();};
+  document.getElementById('fst').onchange=e=>{farmFilter.status=e.target.value;vFarms();};
+  const c=document.getElementById('clearF'); if(c) c.onclick=()=>{farmFilter={q:'',region:'',sup:'',status:''};vFarms();toast('Filters cleared');};
+}
+
+/* ---- FARM DETAIL (key screen) ---- */
+function vFarm(id){
+  const f=farmById(id)||FARMS[0];
+  const reg=REGIONS.find(r=>r.name===f.region);
+  const done=f.fert.filter(x=>x.done).length;
+  const nextIdx=f.fert.findIndex(x=>!x.done);
+  const sup=supObj(f.supervisor)||{};
+  view.innerHTML=`
+   <div class="crumb"><button data-nav="farms">Farms</button>${svg(IC.chev,12)}
+     <button data-nav="regionDetail:${reg?reg.id:''}">${f.region}</button>${svg(IC.chev,12)}<b>${esc(f.displayName)}</b></div>
+   <div class="phead hero">
+     <div class="big-av">${initials(f.displayName)}</div>
+     <div class="t">
+       <h1 class="h1">${esc(f.displayName)}</h1>
+       <div class="hero-meta">
+         <span class="pill">Farm #${f.code}</span>
+         <span>${svg(IC.pin,13)} ${esc(f.village)} · ${esc(f.region)} · ${f.area} Hac.</span>
+         ${stBadge(f.status)}
+       </div>
+     </div>
+     <div class="acts">
+       <button class="btn" data-act="editFarm" data-arg="${f.id}">Edit Farm</button>
+       <button class="btn pri" data-act="addActivity" data-arg="${f.id}">${svg(IC.plus,14,2.2)} Add Activity</button>
+     </div>
+   </div>
+
+   <div class="sumgrid" style="margin-bottom:14px">
+     <div class="sum"><div class="l">Area</div><div class="v">${f.area} Hac.</div></div>
+     <div class="sum"><div class="l">Region</div><div class="v"><button class="btn ghost sm" style="padding:0;height:auto" data-nav="regionDetail:${reg?reg.id:''}">${f.region}</button></div></div>
+     <div class="sum"><div class="l">Supervisor</div><div class="v">${sup.id?`<button class="btn ghost sm" style="padding:0;height:auto" data-nav="supervisor:${sup.id}">${esc(f.supervisor)}</button>`:esc(f.supervisor)}</div></div>
+     <div class="sum"><div class="l">Crop</div><div class="v">${svg(IC.leaf,14)} ${esc(f.crop)}</div></div>
+     <div class="sum"><div class="l">Drip</div><div class="v">${f.dripInstalled==='YES'?`<span class="badge b-yes">Installed</span>`:`<span class="badge b-attention"><i></i>Pending</span>`}</div></div>
+     <div class="sum"><div class="l">Last activity</div><div class="v mono">${iso2s(lastAct(f))}</div></div>
+   </div>
+
+   <div class="two">
+     <div class="stack">
+       <div class="card">
+         <div class="card-h">${svg(IC.file,15)}<h3>Farm Information</h3><div class="r t2">From farm master record</div></div>
+         <div class="card-b"><div class="kv">
+           ${row('Farmer Name',esc(f.owner))}
+           ${row('Farm Code',f.code)}
+           ${row('Mobile',`<span class="mono">${esc(f.mobile)}</span>`)}
+           ${row('Region',esc(f.region))}
+           ${row('Village',esc(f.village))}
+           ${row('Crop Type',esc(f.crop))}
+           ${row('Address',esc(f.address))}
+           ${row('Soil Type',esc(f.soilType))}
+           ${row('Water Source',esc(f.waterSource))}
+           ${row('Status',stBadge(f.status))}
+         </div></div>
+       </div>
+
+       <div class="card">
+         <div class="card-h">${svg(IC.tool,15)}<h3>Drip &amp; Infrastructure</h3>
+           <div class="r">${f.dripInstalled==='YES'?`<span class="badge b-yes">Installed</span>`:`<span class="badge b-attention"><i></i>In progress</span>`}</div></div>
+         <div class="card-b"><div class="kv">
+           ${row('Drip Survey Date',iso2s(f.dripSurveyDate))}
+           ${row('Drip Company',esc(f.dripCompany))}
+           ${row('Area',f.area+' Hac.')}
+           ${row('Quotation',`<span class="mono">${inr(f.quotation)}</span>`)}
+           ${row('Agreement With Farmer',ynBadge(f.agreement))}
+           ${row('PO To Company',ynBadge(f.poToCompany))}
+           ${row('Drip Delivered',ynBadge(f.dripDelivered))}
+           ${row('Drip Installed',ynBadge(f.dripInstalled))}
+           ${row('Plough',ynBadge(f.plough))}
+           ${row('Row Distance',esc(f.rowDistance))}
+           ${row('Dairy Preparation',ynBadge(f.dairyPreparation))}
+         </div></div>
+       </div>
+
+       <div class="card">
+         <div class="card-h">${svg(IC.leaf,15)}<h3>Sowing &amp; Crop</h3><div class="r t2">${f.sowingDate?'Sown '+iso2s(f.sowingDate):'Not sown'}</div></div>
+         <div class="card-b"><div class="kv">
+           ${row('Sowing Date',iso2s(f.sowingDate))}
+           ${row('Seed Details',esc(f.seedDetails))}
+           ${row('Seed Treatment',ynBadge(f.seedTreatment))}
+           ${row('Basal Dose',ynBadge(f.basalDose))}
+           ${row('Drenching',ynBadge(f.drenching))}
+           ${row('Weedicide',ynBadge(f.weedicide))}
+           ${row('Plants (per acre)',`<span class="mono">${f.plantsPerAcre.toLocaleString('en-IN')}</span>`)}
+           ${row('Expected Yield',f.expectedYield)}
+         </div></div>
+       </div>
+
+       <div class="card">
+         <div class="card-h">${svg(IC.drop,15)}<h3>Fertigation Progress</h3>
+           <div class="r t2"><b style="color:var(--ink)">${done}</b> of 24 rounds</div></div>
+         <div class="card-b">
+           <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+             <div class="bar" style="flex:1"><i style="width:${done/24*100}%"></i></div>
+             <span class="t2 mono">${Math.round(done/24*100)}%</span>
+           </div>
+           <div class="fert">
+             ${f.fert.map((x,i)=>`<div class="fcell ${x.done?'done':(i===nextIdx&&x.date?'next':'wait')}">
+                <div class="no">${x.done?svg(IC.check,11,3):(i===nextIdx?svg(IC.cal,11):'<span style="width:11px;height:11px;border:1.6px solid currentColor;border-radius:50%;display:inline-block"></span>')} ${String(x.no).padStart(2,'0')}</div>
+                <div class="dt">${x.date? iso2s(x.date).slice(0,6)+' '+iso2s(x.date).slice(7):'Pending'}</div>
+                <div class="t2" style="font-size:10.5px;margin-top:2px">${x.dose}</div>
+              </div>`).join('')}
+           </div>
+         </div>
+       </div>
+     </div>
+
+     <div class="stack">
+       <div class="card">
+         <div class="card-h">${svg(IC.act,15)}<h3>Recent Activity</h3>
+           <div class="r"><button class="btn sm" data-act="fullTimeline" data-arg="${f.id}">Full timeline ${svg(IC.arrow,13)}</button></div></div>
+         <div class="card-b">${timeline(f.activities.slice(0,4).map(a=>({...a})),{withFarm:false})}
+           <button class="btn sm" style="width:100%;justify-content:center;margin-top:4px" data-act="addActivity" data-arg="${f.id}">${svg(IC.plus,13,2.3)} Add Activity</button></div>
+       </div>
+
+       <div class="card">
+         <div class="card-h">${svg(IC.users,15)}<h3>Team &amp; Responsibility</h3></div>
+         <div class="card-b people">
+           ${person(f.supervisor,'Circle Supervisor',sup.id?`supervisor:${sup.id}`:null)}
+           ${person(f.zonal,'Zonal In-Charge')}
+           ${person(f.devTeam,'Development Team')}
+           ${person(f.devIncharge,'Development In-Charge')}
+         </div>
+       </div>
+
+       <div class="card">
+         <div class="card-h">${svg(IC.cal,15)}<h3>Earthing Up</h3></div>
+         <div class="card-b"><div class="kv" style="grid-template-columns:150px 1fr">
+           ${row('Lite Earthing Up',iso2s(f.liteEarthing))}
+           ${row('Medium Earthing Up',iso2s(f.mediumEarthing))}
+           ${row('Heavy Earthing Up',iso2s(f.heavyEarthing))}
+         </div></div>
+       </div>
+
+       <div class="card exp">
+         <div class="card-h"><h3>Owner &amp; Contact</h3><span class="chev r">${svg(IC.down,15)}</span></div>
+         <div class="card-b">
+           <div class="person"><div class="avatar">${initials(f.owner)}</div>
+             <div><div class="nm">${esc(f.owner)}</div><div class="t2">${svg(IC.phone,11)} ${esc(f.mobile)}</div></div>
+             <button class="btn sm" style="margin-left:auto" data-act="openOwner" data-arg="${f.owner}|${f.region}">View farms</button></div>
+           <div class="t2" style="margin-top:8px">${esc(f.address)}</div>
+         </div>
+       </div>
+
+       <div class="card exp">
+         <div class="card-h"><h3>Record Audit</h3><span class="chev r">${svg(IC.down,15)}</span></div>
+         <div class="card-b"><div class="kv">
+           ${row('Created by','Admin')}
+           ${row('Source','Excel import — Farm Master')}
+           ${row('Last updated',iso2s(lastAct(f))+' by '+esc(f.supervisor))}
+           ${row('Total activities',f.activities.length)}
+         </div></div>
+       </div>
+     </div>
+   </div>`;
+}
+const row=(k,v)=>`<div class="k">${k}</div><div class="v">${v}</div>`;
+function person(name,role,nav){
+  return `<div class="person"><div class="avatar">${initials(name)}</div>
+    <div><div class="nm">${esc(name)}</div><div class="t2">${role}</div></div>
+    ${nav?`<button class="btn sm" style="margin-left:auto" data-nav="${nav}">Open</button>`:''}</div>`;
+}
+
+function vOwners(){
+  const list=owners();
+  view.innerHTML=`
+   <div class="phead"><div><h1 class="h1">Farm Owners</h1><p class="sub">Owners mapped to farms across all regions.</p></div>
+     <div class="acts"><button class="btn pri" data-act="addOwner">${svg(IC.plus,14,2.2)} Add Owner</button></div></div>
+   <div class="rescount"><span><b>${list.length}</b> owners · <b>${FARMS.length}</b> mapped farms</span></div>
+   <div class="card"><div class="tw"><table><thead><tr><th>Owner</th><th>Mobile</th><th>Region</th><th>Farms</th><th>Active Farms</th><th>Status</th><th></th></tr></thead>
+     <tbody>${list.map(o=>`<tr class="click" data-nav="owner:${o.id}">
+       <td><div style="display:flex;gap:9px;align-items:center"><div class="avatar">${initials(o.name)}</div>
+         <div><div class="lk">${esc(o.name)}</div><div class="t2">${esc(o.village)}</div></div></div></td>
+       <td class="mono t2">${esc(o.mobile)}</td><td>${o.region}</td><td>${o.farms.length} ${o.farms.length>1?'farms':'farm'}</td>
+       <td class="mono">${o.farms.filter(f=>f.status==='active').length}</td>
+       <td><span class="badge b-active"><i></i>Active</span></td>
+       <td style="text-align:right;color:var(--muted-2)">${svg(IC.chev,14)}</td></tr>`).join('')}</tbody></table></div></div>`;
+}
+function vOwner(id){
+  const o=ownerById(id)||owners()[0];
+  view.innerHTML=`
+   <div class="crumb"><button data-nav="owners">Farm Owners</button>${svg(IC.chev,12)}<b>${esc(o.name)}</b></div>
+   <div class="phead hero"><div class="big-av">${initials(o.name)}</div>
+     <div class="t"><h1 class="h1">${esc(o.name)}</h1>
+       <div class="hero-meta"><span>${svg(IC.phone,13)} ${esc(o.mobile)}</span><span>${svg(IC.pin,13)} ${esc(o.village)} · ${o.region}</span>
+       <span class="pill">${o.farms.length} ${o.farms.length>1?'Farms':'Farm'}</span></div></div>
+     <div class="acts"><button class="btn pri" data-act="addFarm" data-arg="${o.region}">${svg(IC.plus,14,2.2)} Add Farm</button></div></div>
+   <div class="sumgrid" style="margin-bottom:14px">
+     ${[['Farms',o.farms.length],['Active',o.farms.filter(f=>f.status==='active').length],
+        ['Total area',o.farms.reduce((a,f)=>a+f.area,0).toFixed(1)+' Hac.'],['Region',o.region],
+        ['Supervisors',new Set(o.farms.map(f=>f.supervisor)).size],['Last activity',iso2s(o.farms.map(lastAct).sort().reverse()[0])]]
+       .map(([l,v])=>`<div class="sum"><div class="l">${l}</div><div class="v">${v}</div></div>`).join('')}</div>
+   <div class="card"><div class="card-h"><h3>Mapped Farms</h3></div>
+     ${farmTable(o.farms,['village','area','sup','last'],'No farms mapped to this owner.')}</div>`;
+}
+
+function vSupervisors(){
+  view.innerHTML=`
+   <div class="phead"><div><h1 class="h1">Supervisors</h1><p class="sub">Field team, assignments and latest updates.</p></div>
+     <div class="acts"><button class="btn pri" data-act="addSupervisor">${svg(IC.plus,14,2.2)} Add Supervisor</button></div></div>
+   <div class="card"><div class="tw"><table><thead><tr><th>Supervisor</th><th>Region</th><th>Assigned Farms</th><th>Active Farms</th><th>Last Activity</th><th>Status</th><th></th></tr></thead>
+     <tbody>${SUPERVISORS.map(s=>{const sf=FARMS.filter(f=>f.supervisor===s.name);const la=allActs().find(a=>a.by===s.name);
+      return `<tr class="click" data-nav="supervisor:${s.id}">
+        <td><div style="display:flex;gap:9px;align-items:center"><div class="avatar">${initials(s.name)}</div>
+          <div><div class="lk">${s.name}</div><div class="t2">${s.role}</div></div></div></td>
+        <td>${s.region}</td><td class="mono">${sf.length}</td><td class="mono">${sf.filter(f=>f.status==='active').length}</td>
+        <td class="t2 mono">${la?iso2s(la.date):'—'}</td>
+        <td><span class="badge ${s.status==='Active'?'b-active':'b-pending'}"><i></i>${s.status}</span></td>
+        <td style="text-align:right;color:var(--muted-2)">${svg(IC.chev,14)}</td></tr>`}).join('')}</tbody></table></div></div>`;
+}
+function vSupervisor(id){
+  const s=SUPERVISORS.find(x=>x.id===id)||SUPERVISORS[0];
+  const sf=FARMS.filter(f=>f.supervisor===s.name);
+  const acts=allActs().filter(a=>a.by===s.name).slice(0,6);
+  const reg=REGIONS.find(r=>r.name===s.region);
+  view.innerHTML=`
+   <div class="crumb"><button data-nav="supervisors">Supervisors</button>${svg(IC.chev,12)}<b>${s.name}</b></div>
+   <div class="phead hero"><div class="big-av">${initials(s.name)}</div>
+     <div class="t"><h1 class="h1">${s.name}</h1>
+       <div class="hero-meta"><span class="pill">${s.role}</span>
+         <button class="btn ghost sm" style="padding:0;height:auto" data-nav="regionDetail:${reg?reg.id:''}">${svg(IC.pin,13)} ${s.region}</button>
+         <span>${svg(IC.phone,13)} ${s.mobile}</span>
+         <span class="badge ${s.status==='Active'?'b-active':'b-pending'}"><i></i>${s.status}</span></div></div>
+     <div class="acts"><button class="btn" data-act="reassign" data-arg="${s.id}">Assign Farm</button>
+       <button class="btn pri" data-act="addActivity">${svg(IC.plus,14,2.2)} Add Activity</button></div></div>
+   <div class="sumgrid" style="margin-bottom:14px">
+     ${[['Assigned farms',sf.length],['Active',sf.filter(f=>f.status==='active').length],['Need attention',sf.filter(f=>f.status==='attention').length],
+        ['Area covered',sf.reduce((a,f)=>a+f.area,0).toFixed(1)+' Hac.'],['Villages',new Set(sf.map(f=>f.village)).size],
+        ['Since',iso2s(s.since)]].map(([l,v])=>`<div class="sum"><div class="l">${l}</div><div class="v">${v}</div></div>`).join('')}</div>
+   <div class="two">
+     <div class="card"><div class="card-h"><h3>Assigned Farms</h3><div class="r t2">${sf.length} farms</div></div>
+       ${farmTable(sf,['owner','village','last'],'No farms assigned yet.')}</div>
+     <div class="card"><div class="card-h"><h3>Latest Updates</h3></div><div class="card-b">${timeline(acts)}</div></div>
+   </div>`;
+}
+
+function vLogs(){
+  let list=allActs();
+  const q=logFilter.q.trim().toLowerCase();
+  list=list.filter(a=>{
+    if(logFilter.region && a.farm.region!==logFilter.region) return false;
+    if(logFilter.sup && a.by!==logFilter.sup) return false;
+    if(logFilter.type && a.type!==logFilter.type) return false;
+    if(logFilter.date && a.date!==logFilter.date) return false;
+    if(q && !(a.type+' '+a.desc+' '+a.by+' '+a.farm.displayName).toLowerCase().includes(q)) return false;
+    return true;
+  });
+  const dirty=q||logFilter.region||logFilter.sup||logFilter.type||logFilter.date;
+  const sups=logFilter.region?SUPERVISORS.filter(s=>s.region===logFilter.region):SUPERVISORS;
+  view.innerHTML=`
+   <div class="phead"><div><h1 class="h1">Activity Logs</h1><p class="sub">Every field update across regions, supervisors and farms.</p></div>
+     <div class="acts"><button class="btn pri" data-act="addActivity">${svg(IC.plus,14,2.2)} Add Activity</button></div></div>
+   <div class="filters">
+     <div class="fsearch">${svg(IC.search,15)}<input id="lq" placeholder="Search activity, farm or supervisor…" value="${esc(logFilter.q)}"/></div>
+     <select class="fsel ${logFilter.region?'act':''}" id="lr"><option value="">All Regions</option>${REGIONS.map(r=>`<option ${logFilter.region===r.name?'selected':''}>${r.name}</option>`).join('')}</select>
+     <select class="fsel ${logFilter.sup?'act':''}" id="ls"><option value="">All Supervisors</option>${sups.map(s=>`<option ${logFilter.sup===s.name?'selected':''}>${s.name}</option>`).join('')}</select>
+     <select class="fsel ${logFilter.type?'act':''}" id="lt"><option value="">All Activity Types</option>${ACT_TYPES.map(t=>`<option ${logFilter.type===t?'selected':''}>${t}</option>`).join('')}</select>
+     <input class="fsel ${logFilter.date?'act':''}" type="date" id="ld" value="${logFilter.date}" style="padding:0 10px;background-image:none"/>
+   </div>
+   <div class="rescount">${dirty?`<span>Showing <b>${list.length}</b> of <b>${allActs().length}</b> entries</span>
+      <button class="btn ghost sm" id="clearL">${svg(IC.x,13)} Clear filters</button>`:`<span><b>${list.length}</b> entries</span>`}</div>
+   <div class="two-eq" style="grid-template-columns:1.4fr 1fr">
+     <div class="card"><div class="card-h"><h3>Timeline</h3></div><div class="card-b">${timeline(list.slice(0,40))}</div></div>
+     <div class="stack">
+       <div class="card"><div class="card-h"><h3>Activity by type</h3></div><div class="card-b legend">
+         ${ACT_TYPES.map(t=>{const n=list.filter(a=>a.type===t).length;const mx=Math.max(1,...ACT_TYPES.map(x=>list.filter(a=>a.type===x).length));
+           return `<div><div class="lg" style="margin-bottom:5px">${t}<b>${n}</b></div><div class="bar"><i style="width:${n/mx*100}%"></i></div></div>`}).join('')}
+       </div></div>
+       <div class="card"><div class="card-h"><h3>Most active supervisors</h3></div><div class="card-b legend">
+         ${SUPERVISORS.map(s=>({s,n:list.filter(a=>a.by===s.name).length})).sort((a,b)=>b.n-a.n).slice(0,5)
+           .map(({s,n})=>`<div class="lg" style="cursor:pointer" data-nav="supervisor:${s.id}"><div class="avatar" style="width:22px;height:22px;font-size:10px">${initials(s.name)}</div>${s.name}<b>${n}</b></div>`).join('')}
+       </div></div>
+     </div>
+   </div>`;
+  const i=document.getElementById('lq');
+  i.oninput=e=>{logFilter.q=e.target.value;vLogs();const n=document.getElementById('lq');n.focus();n.setSelectionRange(n.value.length,n.value.length);};
+  document.getElementById('lr').onchange=e=>{logFilter.region=e.target.value;
+    if(logFilter.sup&&!SUPERVISORS.some(s=>s.name===logFilter.sup&&(!logFilter.region||s.region===logFilter.region)))logFilter.sup='';vLogs();};
+  document.getElementById('ls').onchange=e=>{logFilter.sup=e.target.value;vLogs();};
+  document.getElementById('lt').onchange=e=>{logFilter.type=e.target.value;vLogs();};
+  document.getElementById('ld').onchange=e=>{logFilter.date=e.target.value;vLogs();};
+  const c=document.getElementById('clearL'); if(c)c.onclick=()=>{logFilter={q:'',region:'',sup:'',type:'',date:''};vLogs();toast('Filters cleared');};
+}
+
+function vSettings(){
+  view.innerHTML=`
+   <div class="phead"><div><h1 class="h1">Settings</h1><p class="sub">Workspace preferences for this demo environment.</p></div></div>
+   <div class="two-eq">
+     <div class="card"><div class="card-h"><h3>Organisation</h3></div><div class="card-b"><div class="kv">
+       ${row('Workspace','AgriTrack — Betul Operations')}${row('Plan','Enterprise (demo)')}
+       ${row('Regions',REGIONS.length)}${row('Farms',FARMS.length)}${row('Data source','Excel — Farm Master import')}
+     </div></div></div>
+     <div class="card"><div class="card-h"><h3>Admin profile</h3></div><div class="card-b">
+       <div class="person"><div class="avatar">AD</div><div><div class="nm">Admin</div><div class="t2">admin@agritrack.in · Full access</div></div></div>
+       <div style="display:flex;gap:8px;margin-top:12px"><button class="btn" data-act="noop">Change password</button>
+         <button class="btn danger" id="lo2">Log out</button></div>
+     </div></div>
+   </div>`;
+  document.getElementById('lo2').onclick=()=>confirmDialog('Log out of AgriTrack?','This is a demo, nothing is lost.','Log out',()=>toast('Signed out (demo)'));
+}
+
+/* ---------------- actions: drawers & forms ---------------- */
+function field(label,name,{type='text',req,val='',hint,options,placeholder}={}){
+  if(options) return `<div class="f" data-f="${name}"><label>${label}${req?' <span class="req">*</span>':''}</label>
+    <select name="${name}">${options.map(o=>`<option value="${esc(o)}" ${o===val?'selected':''}>${esc(o)}</option>`).join('')}</select>
+    ${hint?`<span class="hint">${hint}</span>`:''}</div>`;
+  return `<div class="f" data-f="${name}"><label>${label}${req?' <span class="req">*</span>':''}</label>
+    <input name="${name}" type="${type}" value="${esc(val)}" placeholder="${esc(placeholder||'')}"/>${hint?`<span class="hint">${hint}</span>`:''}</div>`;
+}
+function actions(kind,arg,btn){
+  if(kind==='addFarm') return farmDrawer(null,arg);
+  if(kind==='editFarm') return farmDrawer(farmById(arg));
+  if(kind==='addRegion') return regionDrawer();
+  if(kind==='addOwner') return ownerDrawer();
+  if(kind==='addSupervisor') return supDrawer(arg);
+  if(kind==='addActivity') return activityDrawer(arg);
+  if(kind==='fullTimeline') return timelineDrawer(arg);
+  if(kind==='openOwner'){const [n,r]=arg.split('|');const o=owners().find(x=>x.name===n&&x.region===r);return go('owner',o.id);}
+  if(kind==='reassign'){const s=SUPERVISORS.find(x=>x.id===arg);return assignDrawer(s);}
+  if(kind==='readall'){closeOverlays();toast('All notifications marked as read');return;}
+  if(kind==='noop'){toast('Not available in this demo',true);}
+}
+function submitBtn(label){return `<button class="btn ghost" data-close>Cancel</button><button class="btn pri" id="saveBtn">${label}</button>`;}
+function withSave(fn){
+  const b=document.getElementById('saveBtn');
+  b.onclick=()=>{
+    const old=b.innerHTML; b.innerHTML=`<span class="spin"></span> Saving…`; b.disabled=true;
+    setTimeout(()=>{ if(fn()===false){b.innerHTML=old;b.disabled=false;} },420);
+  };
+}
+function vals(root){const o={};root.querySelectorAll('[name]').forEach(i=>o[i.name]=i.value.trim());return o;}
+function markErr(root,names){
+  root.querySelectorAll('.f').forEach(f=>f.classList.remove('err'));
+  names.forEach(n=>{const f=root.querySelector(`[data-f="${n}"]`);if(f)f.classList.add('err');});
+}
+
+function farmDrawer(farm,presetRegion){
+  const edit=!!farm;
+  const regionNames=REGIONS.map(r=>r.name);
+  const startRegion=edit?farm.region:(presetRegion||regionNames[0]);
+  const supsFor=r=>SUPERVISORS.filter(s=>s.region===r).map(s=>s.name);
+  openDrawer({
+    title: edit?'Edit Farm':'Add Farm',
+    sub: edit?`Farm #${farm.code} · ${farm.region}`:'Create a farm record and assign a supervisor.',
+    body:`
+      <div class="fs"><span class="sec-title">1 · Basic Information</span>
+        ${field('Farm Name','name',{req:true,val:edit?farm.displayName:'',placeholder:'e.g. Chindhya Ganoba Gawande'})}
+        <div class="frow">${field('Farm Code','code',{req:true,val:edit?farm.code:String(5880+FARMS.length)})}
+        ${field('Mobile Number','mobile',{req:true,val:edit?farm.mobile:'',placeholder:'10-digit mobile'})}</div>
+        ${field('Farm Owner','owner',{req:true,val:edit?farm.owner:'',placeholder:'Owner name as per record'})}
+      </div>
+      <div class="fs"><span class="sec-title">2 · Location</span>
+        <div class="frow">${field('Region','region',{req:true,options:regionNames,val:startRegion})}
+        ${field('Village','village',{req:true,val:edit?farm.village:'',placeholder:'e.g. Gouna'})}</div>
+        ${field('Address','address',{val:edit?farm.address:'',placeholder:'Survey no., tehsil, district'})}
+      </div>
+      <div class="fs"><span class="sec-title">3 · Assignment</span>
+        <div class="frow">${field('Supervisor','supervisor',{req:true,options:supsFor(startRegion),val:edit?farm.supervisor:'',hint:'Filtered by region'})}
+        ${field('Area (Hac.)','area',{type:'number',req:true,val:edit?farm.area:'1'})}</div>
+        ${field('Crop Type','crop',{options:['Plant','Ratoon'],val:edit?farm.crop:'Plant'})}
+      </div>
+      <div class="fs"><span class="sec-title">4 · Status</span>
+        ${field('Farm Status','status',{options:Object.values(STLABEL),val:edit?STLABEL[farm.status]:'Active'})}
+      </div>
+      <div class="preview" id="prev"></div>`,
+    footer: submitBtn(edit?'Save Changes':'Create Farm'),
+    onMount(root){
+      const rs=root.querySelector('[name=region]'), ss=root.querySelector('[name=supervisor]');
+      const sync=()=>{
+        const list=supsFor(rs.value);
+        const keep=list.includes(ss.value)?ss.value:list[0];
+        ss.innerHTML=list.map(n=>`<option ${n===keep?'selected':''}>${n}</option>`).join('');
+        prev();
+      };
+      const prev=()=>{
+        const v=vals(root);
+        root.querySelector('#prev').innerHTML=`<div class="t">Before saving — review</div>
+          ${[['Region',v.region],['Supervisor',ss.value],['Village',v.village||'—'],['Area',(v.area||'—')+' Hac.'],['Status',v.status]]
+            .map(([k,x])=>`<div class="row"><span>${k}</span><b>${esc(x)}</b></div>`).join('')}`;
+      };
+      rs.onchange=sync; root.querySelectorAll('[name]').forEach(i=>i.addEventListener('input',prev)); ss.onchange=prev;
+      sync();
+      withSave(()=>{
+        const v=vals(root);
+        const miss=['name','code','mobile','owner','village','area'].filter(k=>!v[k]);
+        if(miss.length){markErr(root,miss);toast('Please fill the required fields',true);return false;}
+        const st=Object.keys(STLABEL).find(k=>STLABEL[k]===v.status)||'active';
+        if(edit){
+          Object.assign(farm,{displayName:v.name,name:v.name,code:v.code,mobile:v.mobile,owner:v.owner,region:v.region,
+            village:v.village,address:v.address,supervisor:v.supervisor,area:parseFloat(v.area)||1,crop:v.crop,status:st,
+            zonal:ZONAL[v.region],devTeam:DEVTEAM[v.region],devIncharge:DEVIC[v.region]});
+          closeOverlays();renderNav();go('farm',farm.id);toast('Farm updated successfully');
+        }else{
+          const nf={id:'f'+v.code+Math.floor(Math.random()*90),displayName:v.name,name:v.name,code:v.code,owner:v.owner,mobile:v.mobile,
+            region:v.region,village:v.village,area:parseFloat(v.area)||1,crop:v.crop,supervisor:v.supervisor,zonal:ZONAL[v.region],
+            devTeam:DEVTEAM[v.region],devIncharge:DEVIC[v.region],status:st,address:v.address||`${v.village}, Dist. Betul (M.P.)`,
+            dripSurveyDate:null,dripCompany:'—',quotation:Math.round(105000*(parseFloat(v.area)||1)),agreement:'NO',poToCompany:'NO',
+            dripDelivered:'NO',dripInstalled:'NO',plough:'NO',rowDistance:'5 ft',dairyPreparation:'NO',sowingDate:null,
+            seedDetails:'—',seedTreatment:'NO',basalDose:'NO',drenching:'NO',weedicide:'NO',liteEarthing:null,mediumEarthing:null,
+            heavyEarthing:null,soilType:'Medium black',waterSource:'Bore well',plantsPerAcre:8000,expectedYield:'—',
+            fert:Array.from({length:24},(_,k)=>({no:k+1,date:null,done:false,dose:['NPK 19:19:19','Urea + SOP','12:61:00','00:52:34','Micronutrient mix'][k%5]})),
+            activities:[{id:'a'+(ACT_ID++),type:'Other',desc:'Farm record created in AgriTrack',date:NOW.toISOString().slice(0,10),time:'10:30 AM',by:'Admin'}]};
+          FARMS.unshift(nf);
+          closeOverlays();renderNav();go('farm',nf.id);toast('Farm created successfully');
+        }
+      });
+    }
+  });
+}
+function regionDrawer(){
+  openDrawer({title:'Add Region',sub:'Create a geographic area to group farms.',
+    body:`<div class="fs"><span class="sec-title">Region details</span>
+      ${field('Region Name','name',{req:true,placeholder:'e.g. Amla'})}
+      <div class="frow">${field('Region Code','code',{req:true,val:'REG-0'+(REGIONS.length+1)})}
+      ${field('Status','status',{options:['Active','Inactive']})}</div>
+      ${field('District / State','district',{val:'Betul, Madhya Pradesh'})}</div>`,
+    footer:submitBtn('Create Region'),
+    onMount(root){withSave(()=>{
+      const v=vals(root); if(!v.name||!v.code){markErr(root,['name','code'].filter(k=>!v[k]));toast('Region name and code are required',true);return false;}
+      REGIONS.push({id:'r'+Date.now(),name:v.name,code:v.code,district:v.district,status:v.status});
+      closeOverlays();renderNav();go('regions');toast('Region created successfully');
+    });}});
+}
+function ownerDrawer(){
+  openDrawer({title:'Add Farm Owner',sub:'Owners are mapped to farms in a region.',
+    body:`<div class="fs"><span class="sec-title">Owner details</span>
+      ${field('Owner Name','name',{req:true})}
+      <div class="frow">${field('Mobile Number','mobile',{req:true})}${field('Region','region',{options:REGIONS.map(r=>r.name)})}</div>
+      ${field('Village','village',{req:true})}</div>
+      <div class="fs"><span class="sec-title">Map to farm (optional)</span>
+      ${field('Existing farm','farm',{options:['— none —',...FARMS.map(f=>f.displayName+' · #'+f.code)]})}</div>`,
+    footer:submitBtn('Create Owner'),
+    onMount(root){withSave(()=>{
+      const v=vals(root); const miss=['name','mobile','village'].filter(k=>!v[k]);
+      if(miss.length){markErr(root,miss);toast('Please fill the required fields',true);return false;}
+      if(v.farm&&v.farm!=='— none —'){const code=v.farm.split('#')[1];const f=FARMS.find(x=>x.code===code);if(f){f.owner=v.name;f.mobile=v.mobile;}}
+      closeOverlays();renderNav();go('owners');toast('Farm owner created successfully');
+    });}});
+}
+function supDrawer(presetRegion){
+  openDrawer({title:'Add Supervisor',sub:'Assign a supervisor to a region and farms.',
+    body:`<div class="fs"><span class="sec-title">Supervisor details</span>
+      ${field('Full Name','name',{req:true})}
+      <div class="frow">${field('Mobile Number','mobile',{req:true})}${field('Role','role',{options:['Circle Supervisor','Field Supervisor','Zonal In-Charge']})}</div>
+      ${field('Region','region',{options:REGIONS.map(r=>r.name),val:presetRegion||REGIONS[0].name})}
+      ${field('Status','status',{options:['Active','On leave']})}</div>`,
+    footer:submitBtn('Create Supervisor'),
+    onMount(root){withSave(()=>{
+      const v=vals(root); const miss=['name','mobile'].filter(k=>!v[k]);
+      if(miss.length){markErr(root,miss);toast('Name and mobile are required',true);return false;}
+      SUPERVISORS.push({id:'s'+Date.now(),name:v.name,region:v.region,role:v.role,mobile:v.mobile,status:v.status,since:NOW.toISOString().slice(0,10)});
+      closeOverlays();renderNav();go('supervisors');toast('Supervisor assigned successfully');
+    });}});
+}
+function assignDrawer(s){
+  const pool=FARMS.filter(f=>f.region===s.region&&f.supervisor!==s.name);
+  openDrawer({title:'Assign Farm',sub:`${s.name} · ${s.region}`,
+    body: pool.length?`<div class="fs"><span class="sec-title">Farm</span>
+      ${field('Farm','farm',{options:pool.map(f=>f.displayName+' · #'+f.code)})}
+      <span class="hint">Only farms in ${s.region} are shown.</span></div>`:emptyState('Every farm in this region is already assigned to '+s.name+'.'),
+    footer: pool.length?submitBtn('Assign Farm'):`<button class="btn" data-close>Close</button>`,
+    onMount(root){ if(!pool.length)return; withSave(()=>{
+      const v=vals(root);const code=v.farm.split('#')[1];const f=FARMS.find(x=>x.code===code);
+      if(f)f.supervisor=s.name;
+      closeOverlays();go('supervisor',s.id);toast('Supervisor assigned successfully');
+    });}});
+}
+function activityDrawer(farmId){
+  const f=farmId?farmById(farmId):null;
+  openDrawer({title:'Add Activity',sub:f?`${f.displayName} · Farm #${f.code}`:'Log a field update against a farm.',
+    body:`<div class="fs"><span class="sec-title">Activity</span>
+      ${f?'':field('Farm','farm',{options:FARMS.map(x=>x.displayName+' · #'+x.code)})}
+      ${field('Activity Type','type',{options:ACT_TYPES,val:'Fertigation'})}
+      <div class="frow">${field('Date','date',{type:'date',val:NOW.toISOString().slice(0,10),req:true})}
+      ${field('Time','time',{type:'time',val:'10:30'})}</div>
+      <div class="f" data-f="desc"><label>Description <span class="req">*</span></label>
+        <textarea name="desc" placeholder="e.g. First fertigation completed with NPK 19:19:19"></textarea></div>
+      ${field('Added By','by',{options:SUPERVISORS.map(s=>s.name).concat('Admin'),val:f?f.supervisor:'Admin'})}
+      ${field('Update farm status to','status',{options:['— no change —',...Object.values(STLABEL)]})}
+    </div>`,
+    footer:submitBtn('Add Activity'),
+    onMount(root){withSave(()=>{
+      const v=vals(root);
+      if(!v.desc){markErr(root,['desc']);toast('Please add a short description',true);return false;}
+      const target = f || FARMS.find(x=>x.code===v.farm.split('#')[1]);
+      const [h,m]=(v.time||'10:30').split(':').map(Number);
+      const t=`${((h+11)%12)+1}:${String(m).padStart(2,'0')} ${h<12?'AM':'PM'}`;
+      target.activities.unshift({id:'a'+(ACT_ID++),type:v.type,desc:v.desc,date:v.date,time:t,by:v.by});
+      target.activities.sort((a,b)=>a.date<b.date?1:a.date>b.date?-1:0);
+      if(v.status&&v.status!=='— no change —') target.status=Object.keys(STLABEL).find(k=>STLABEL[k]===v.status);
+      if(v.type==='Fertigation'){const n=target.fert.find(x=>!x.done); if(n){n.done=true;n.date=v.date;}}
+      closeOverlays();go('farm',target.id);toast('Activity added successfully');
+    });}});
+}
+function timelineDrawer(farmId){
+  const f=farmById(farmId);
+  openDrawer({title:'Full Activity Timeline',sub:`${f.displayName} · ${f.activities.length} entries`,
+    body:`<div class="tw" style="margin-bottom:14px"><table style="min-width:auto"><thead><tr><th>Date</th><th>Time</th><th>Activity</th><th>Added by</th></tr></thead>
+      <tbody>${f.activities.map(a=>`<tr><td class="mono t2">${iso2s(a.date)}</td><td class="mono t2">${a.time}</td>
+        <td><div style="font-weight:600">${esc(a.type)}</div><div class="t2">${esc(a.desc)}</div></td><td class="t2">${esc(a.by)}</td></tr>`).join('')}</tbody></table></div>
+      ${timeline(f.activities,{withFarm:false})}`,
+    footer:`<button class="btn ghost" data-close>Close</button><button class="btn pri" data-act="addActivity" data-arg="${f.id}">${svg(IC.plus,14,2.2)} Add Activity</button>`});
+}
+
+/* boot */
+renderNav(); render();
+</script>
+</body>
+</html>
