@@ -1,24 +1,36 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "AgriTrack — Farm Operations Management" },
+      {
+        name: "description",
+        content:
+          "AgriTrack is a farm operations platform for managing regions, farms, owners, supervisors and field activity logs in one place.",
+      },
+      { property: "og:title", content: "AgriTrack — Farm Operations Management" },
+      {
+        property: "og:description",
+        content:
+          "Track regions, farms, owners, supervisors and daily field activity across your entire agricultural operation.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
+    <>
+      <h1 className="sr-only">AgriTrack farm operations management</h1>
+      <iframe
+        src="/agritrack.html"
+        title="AgriTrack farm operations management"
+        className="fixed inset-0 h-full w-full border-0"
       />
-    </div>
+    </>
   );
 }
