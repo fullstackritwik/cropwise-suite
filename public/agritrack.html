@@ -911,13 +911,14 @@ function vFarm(id){
    <div class="two">
      <div class="stack">
        <div class="card">
-         <div class="card-h">${svg(IC.file,15)}<h3>Farm Information</h3><div class="r t2">From farm master record</div></div>
+         <div class="card-h">${svg(IC.file,15)}<h3><span class="pill">1</span> Basic &amp; Farmer Information</h3><div class="r t2">Farmer record sheet</div></div>
          <div class="card-b"><div class="kv">
+           ${row('S.N.',`<span class="mono">${f.sn}</span>`)}
+           ${row('Code',`<span class="mono">${f.code}</span>`)}
            ${row('Farmer Name',esc(f.owner))}
-           ${row('Farm Code',f.code)}
-           ${row('Mobile',`<span class="mono">${esc(f.mobile)}</span>`)}
-           ${row('Region',esc(f.region))}
-           ${row('Village',esc(f.village))}
+           ${row('Mobile No.',`<span class="mono">${esc(f.mobile)}</span>`)}
+           ${row('Circle Name',esc(f.region))}
+           ${row('Village Name',esc(f.village))}
            ${row('Crop Type',esc(f.crop))}
            ${row('Address',esc(f.address))}
            ${row('Soil Type',esc(f.soilType))}
@@ -927,25 +928,36 @@ function vFarm(id){
        </div>
 
        <div class="card">
-         <div class="card-h">${svg(IC.tool,15)}<h3>Drip &amp; Infrastructure</h3>
-           <div class="r">${f.dripInstalled==='YES'?`<span class="badge b-yes">Installed</span>`:`<span class="badge b-attention"><i></i>In progress</span>`}</div></div>
+         <div class="card-h">${svg(IC.users,15)}<h3><span class="pill">2</span> Recommendations (Name)</h3></div>
          <div class="card-b"><div class="kv">
-           ${row('Drip Survey Date',iso2s(f.dripSurveyDate))}
-           ${row('Drip Company',esc(f.dripCompany))}
-           ${row('Area',f.area+' Hac.')}
-           ${row('Quotation',`<span class="mono">${inr(f.quotation)}</span>`)}
-           ${row('Agreement With Farmer',ynBadge(f.agreement))}
-           ${row('PO To Company',ynBadge(f.poToCompany))}
-           ${row('Drip Delivered',ynBadge(f.dripDelivered))}
-           ${row('Drip Installed',ynBadge(f.dripInstalled))}
-           ${row('Plough',ynBadge(f.plough))}
-           ${row('Row Distance',esc(f.rowDistance))}
-           ${row('Dairy Preparation',ynBadge(f.dairyPreparation))}
+           ${row('Circle Supervisor',esc(f.supervisor))}
+           ${row('Zonal In-Charge',esc(f.zonal))}
+           ${row('Devlop. Team',esc(f.devTeam))}
+           ${row('Devlop. In Charge',esc(f.devIncharge))}
          </div></div>
        </div>
 
        <div class="card">
-         <div class="card-h">${svg(IC.leaf,15)}<h3>Sowing &amp; Crop</h3><div class="r t2">${f.sowingDate?'Sown '+iso2s(f.sowingDate):'Not sown'}</div></div>
+         <div class="card-h">${svg(IC.tool,15)}<h3><span class="pill">3</span> Drip &amp; Work Status</h3>
+           <div class="r">${f.dripInstalled==='YES'?`<span class="badge b-yes">Installed</span>`:`<span class="badge b-attention"><i></i>In progress</span>`}</div></div>
+         <div class="card-b"><div class="kv">
+           ${row('Drip Survey Date',iso2s(f.dripSurveyDate))}
+           ${row('Drip Company',esc(f.dripCompany))}
+           ${row('Area (Hac.)',f.area)}
+           ${row('Panchiyan / ID',`<span class="mono">${esc(f.panchiyan)}</span>`)}
+           ${row('Quotation',`<span class="mono">${inr(f.quotation)}</span>`)}
+           ${row('Agreem. With Farmer',ynBadge(f.agreement))}
+           ${row('PO To Company',ynBadge(f.poToCompany))}
+           ${row('Drip Delivered',ynBadge(f.dripDelivered))}
+           ${row('Drip Installed',ynBadge(f.dripInstalled))}
+           ${row('Plough',ynBadge(f.plough))}
+           ${row('Row Distance (ft)',esc(f.rowDistance))}
+           ${row('Dairy Prep.',ynBadge(f.dairyPreparation))}
+         </div></div>
+       </div>
+
+       <div class="card">
+         <div class="card-h">${svg(IC.leaf,15)}<h3><span class="pill">4</span> Sowing &amp; Seed Treatment</h3><div class="r t2">${f.sowingDate?'Sown '+iso2s(f.sowingDate):'Not sown'}</div></div>
          <div class="card-b"><div class="kv">
            ${row('Sowing Date',iso2s(f.sowingDate))}
            ${row('Seed Details',esc(f.seedDetails))}
@@ -955,26 +967,32 @@ function vFarm(id){
            ${row('Weedicide',ynBadge(f.weedicide))}
            ${row('Plants (per acre)',`<span class="mono">${f.plantsPerAcre.toLocaleString('en-IN')}</span>`)}
            ${row('Expected Yield',f.expectedYield)}
-         </div></div>
+         </div>
+         <div style="margin-top:12px;padding:11px 13px;border:1px solid var(--line);border-radius:10px;background:var(--soft)">
+           <div class="t2" style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px">General Remark</div>
+           <div>${esc(f.generalRemark)}</div>
+         </div>
+         </div>
        </div>
 
        <div class="card">
-         <div class="card-h">${svg(IC.drop,15)}<h3>Fertigation Progress</h3>
-           <div class="r t2"><b style="color:var(--ink)">${done}</b> of 24 rounds</div></div>
+         <div class="card-h">${svg(IC.drop,15)}<h3><span class="pill">6</span> Fertigation Dates (1st – 30th)</h3>
+           <div class="r t2"><b style="color:var(--ink)">${done}</b> of 30 rounds</div></div>
          <div class="card-b">
            <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
-             <div class="bar" style="flex:1"><i style="width:${done/24*100}%"></i></div>
-             <span class="t2 mono">${Math.round(done/24*100)}%</span>
+             <div class="bar" style="flex:1"><i style="width:${done/30*100}%"></i></div>
+             <span class="t2 mono">${Math.round(done/30*100)}%</span>
            </div>
            <div class="fert">
              ${f.fert.map((x,i)=>`<div class="fcell ${x.done?'done':(i===nextIdx&&x.date?'next':'wait')}">
                 <div class="no">${x.done?svg(IC.check,11,3):(i===nextIdx?svg(IC.cal,11):'<span style="width:11px;height:11px;border:1.6px solid currentColor;border-radius:50%;display:inline-block"></span>')} ${String(x.no).padStart(2,'0')}</div>
-                <div class="dt">${x.date? iso2s(x.date).slice(0,6)+' '+iso2s(x.date).slice(7):'Pending'}</div>
+                <div class="dt">${x.date? iso2s(x.date).slice(0,6)+' '+iso2s(x.date).slice(7):'—'}</div>
                 <div class="t2" style="font-size:10.5px;margin-top:2px">${x.dose}</div>
               </div>`).join('')}
            </div>
          </div>
        </div>
+
      </div>
 
      <div class="stack">
