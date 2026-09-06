@@ -451,6 +451,7 @@ let FARMS = SEED.map((r,i)=>{
   const installed = status!=='pending';
   const f = {
     id:'f'+code, name:name+(SEED.filter(x=>x[0]===name).length>1?'':''), displayName:name, code:String(code),
+    sn:i+1, panchiyan:'XXX'+String(25+i),
     owner:name, mobile:'9'+String(165131488+i*37117).slice(0,9), region, village, area, crop,
     supervisor:sup, zonal:ZONAL[region], devTeam:DEVTEAM[region], devIncharge:DEVIC[region],
     status, address:`Survey No. ${120+i}, ${village}, Tehsil ${region}, Dist. Betul (M.P.) 460001`,
@@ -460,17 +461,21 @@ let FARMS = SEED.map((r,i)=>{
     sowingDate: status==='pending'?null:sowing, seedDetails:SEEDS_DETAIL[i%SEEDS_DETAIL.length],
     seedTreatment: status==='pending'?'NO':'YES', basalDose: status==='pending'?'NO':'YES',
     drenching: status==='pending'?'NO':'YES', weedicide: (status==='pending'||i%7===3)?'NO':'YES',
+    generalRemark: status==='pending'? 'Sowing not started. Awaiting drip installation and first plough.'
+      : status==='attention'? 'Fertigation schedule slipping — follow up with farmer on pump electricity issue.'
+      : 'Crop condition good. Schedule being followed as per plan.',
     liteEarthing: status==='pending'?null:addDays(sowing,60), mediumEarthing: status==='pending'?null:addDays(sowing,118),
     heavyEarthing: status==='pending'?null:addDays(sowing,149),
     soilType:['Medium black','Deep black','Shallow black'][i%3], waterSource:['Bore well','Open well','Canal'][i%3],
     plantsPerAcre: 8000+ (i%4)*250, expectedYield: (area*48+ (i%5)*3).toFixed(1)+' MT',
     fert:[], activities:[]
   };
-  // fertigation: 24 rounds
-  const total=24; const done = status==='pending'?0: status==='completed'?24: 4+Math.floor(rnd()*10);
+  // fertigation: 30 rounds (as per farmer record sheet)
+  const total=30; const done = status==='pending'?0: status==='completed'?30: 4+Math.floor(rnd()*10);
   for(let k=0;k<total;k++){
-    f.fert.push({no:k+1, date: f.sowingDate? addDays(f.sowingDate,12+k*14): null, done:k<done, dose:['NPK 19:19:19','Urea + SOP','12:61:00','00:52:34','Micronutrient mix'][k%5]});
+    f.fert.push({no:k+1, date: f.sowingDate && k < (status==='completed'?30:done+8) ? addDays(f.sowingDate,12+k*11): null, done:k<done, dose:['NPK 19:19:19','Urea + SOP','12:61:00','00:52:34','Micronutrient mix'][k%5]});
   }
+
   // activities
   const n = status==='pending'?2:4+Math.floor(rnd()*4);
   for(let k=0;k<n;k++){
