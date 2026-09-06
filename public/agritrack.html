@@ -1299,7 +1299,8 @@ function farmDrawer(farm,presetRegion){
             dripDelivered:'NO',dripInstalled:'NO',plough:'NO',rowDistance:'5 ft',dairyPreparation:'NO',sowingDate:null,
             seedDetails:'—',seedTreatment:'NO',basalDose:'NO',drenching:'NO',weedicide:'NO',liteEarthing:null,mediumEarthing:null,
             heavyEarthing:null,soilType:'Medium black',waterSource:'Bore well',plantsPerAcre:8000,expectedYield:'—',
-            fert:Array.from({length:24},(_,k)=>({no:k+1,date:null,done:false,dose:['NPK 19:19:19','Urea + SOP','12:61:00','00:52:34','Micronutrient mix'][k%5]})),
+            sn:FARMS.length+1,panchiyan:'—',generalRemark:'New farm record. Awaiting drip survey and sowing plan.',
+            fert:Array.from({length:30},(_,k)=>({no:k+1,date:null,done:false,dose:['NPK 19:19:19','Urea + SOP','12:61:00','00:52:34','Micronutrient mix'][k%5]})),
             activities:[{id:'a'+(ACT_ID++),type:'Other',desc:'Farm record created in AgriTrack',date:NOW.toISOString().slice(0,10),time:'10:30 AM',by:'Admin'}]};
           FARMS.unshift(nf);
           closeOverlays();renderNav();go('farm',nf.id);toast('Farm created successfully');
