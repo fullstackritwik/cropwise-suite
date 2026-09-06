@@ -492,6 +492,43 @@ let FARMS = SEED.map((r,i)=>{
   return f;
 });
 
+/* ---- Reference record: exact values from the client's farmer record sheet (Code 5755) ---- */
+(function(){
+  const f = FARMS.find(x=>x.code==='5755'); if(!f) return;
+  Object.assign(f,{
+    sn:1, panchiyan:'XXX25', mobile:'9165131488', crop:'Plant', area:1,
+    supervisor:'Mohit Dhote', zonal:'Sandeep Choudhary', devTeam:'Abhijit Patil', devIncharge:'Suyash Dumbre',
+    dripSurveyDate:'2025-10-15', dripCompany:'JAIN', quotation:105553,
+    agreement:'YES', poToCompany:'YES', dripDelivered:'YES', dripInstalled:'YES',
+    plough:'YES', rowDistance:'5 ft', dairyPreparation:'YES',
+    sowingDate:'2025-12-30', seedDetails:'D.E.B.', seedTreatment:'YES', basalDose:'YES',
+    drenching:'YES', weedicide:'YES',
+    generalRemark:'Plot visited with drip company for survey. Sowing, seed treatment and basal dose completed on 30 Dec. Fertigation started 25 Jan.',
+    liteEarthing:'2026-02-28', mediumEarthing:'2026-04-27', heavyEarthing:'2026-05-28'
+  });
+  const fd=['2026-01-25','2026-02-05','2026-02-22','2026-03-05','2026-03-14','2026-03-28','2026-04-05','2026-04-14',
+    '2026-04-21','2026-04-30','2026-05-08','2026-05-17','2026-05-24','2026-05-30','2026-06-11','2026-06-21',
+    '2026-06-30','2026-07-08','2026-07-16','2026-07-24','2026-08-01','2026-08-14','2026-08-23'];
+  const today=NOW.toISOString().slice(0,10);
+  f.fert.forEach((x,i)=>{ x.date = fd[i]||null; x.done = !!(x.date && x.date<=today); });
+  const log=[
+    ['2025-10-08','Farm Visit','Plot visit and farmer meet with circle supervisor'],
+    ['2025-10-15','Inspection','Plot visit with drip company for survey'],
+    ['2025-11-01','Farm Visit','Plot visit for 2nd plough'],
+    ['2025-12-03','Farm Visit','Plot visit for saar'],
+    ['2025-12-30','Sowing','Sowing, seed treatment and basal dose completed'],
+    ['2026-01-05','Drenching','Drenching done'],
+    ['2026-01-15','Weedicide','Weedicide spray completed'],
+    ['2026-01-20','Farm Visit','Visit for fertigation starting, but electricity fault found at pump house'],
+    ['2026-01-25','Fertigation','First fertigation done with recommended dose']
+  ];
+  f.activities = log.map(([date,type,desc],k)=>({id:'a'+(ACT_ID++),farmId:f.id,type,desc,date,
+    time:['10:30 AM','11:15 AM','09:40 AM','04:10 PM','08:50 AM','10:05 AM','03:30 PM','12:20 PM','09:15 AM'][k],
+    by:f.supervisor})).sort((a,b)=> a.date<b.date?1:-1);
+})();
+
+
+
 /* derived */
 const byRegion = r => FARMS.filter(f=>f.region===r);
 const supObj = n => SUPERVISORS.find(s=>s.name===n);
