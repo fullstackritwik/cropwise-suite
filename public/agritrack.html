@@ -451,6 +451,7 @@ let FARMS = SEED.map((r,i)=>{
   const installed = status!=='pending';
   const f = {
     id:'f'+code, name:name+(SEED.filter(x=>x[0]===name).length>1?'':''), displayName:name, code:String(code),
+    sn:i+1, panchiyan:'XXX'+String(25+i),
     owner:name, mobile:'9'+String(165131488+i*37117).slice(0,9), region, village, area, crop,
     supervisor:sup, zonal:ZONAL[region], devTeam:DEVTEAM[region], devIncharge:DEVIC[region],
     status, address:`Survey No. ${120+i}, ${village}, Tehsil ${region}, Dist. Betul (M.P.) 460001`,
@@ -460,17 +461,21 @@ let FARMS = SEED.map((r,i)=>{
     sowingDate: status==='pending'?null:sowing, seedDetails:SEEDS_DETAIL[i%SEEDS_DETAIL.length],
     seedTreatment: status==='pending'?'NO':'YES', basalDose: status==='pending'?'NO':'YES',
     drenching: status==='pending'?'NO':'YES', weedicide: (status==='pending'||i%7===3)?'NO':'YES',
+    generalRemark: status==='pending'? 'Sowing not started. Awaiting drip installation and first plough.'
+      : status==='attention'? 'Fertigation schedule slipping — follow up with farmer on pump electricity issue.'
+      : 'Crop condition good. Schedule being followed as per plan.',
     liteEarthing: status==='pending'?null:addDays(sowing,60), mediumEarthing: status==='pending'?null:addDays(sowing,118),
     heavyEarthing: status==='pending'?null:addDays(sowing,149),
     soilType:['Medium black','Deep black','Shallow black'][i%3], waterSource:['Bore well','Open well','Canal'][i%3],
     plantsPerAcre: 8000+ (i%4)*250, expectedYield: (area*48+ (i%5)*3).toFixed(1)+' MT',
     fert:[], activities:[]
   };
-  // fertigation: 24 rounds
-  const total=24; const done = status==='pending'?0: status==='completed'?24: 4+Math.floor(rnd()*10);
+  // fertigation: 30 rounds (as per farmer record sheet)
+  const total=30; const done = status==='pending'?0: status==='completed'?30: 4+Math.floor(rnd()*10);
   for(let k=0;k<total;k++){
-    f.fert.push({no:k+1, date: f.sowingDate? addDays(f.sowingDate,12+k*14): null, done:k<done, dose:['NPK 19:19:19','Urea + SOP','12:61:00','00:52:34','Micronutrient mix'][k%5]});
+    f.fert.push({no:k+1, date: f.sowingDate && k < (status==='completed'?30:done+8) ? addDays(f.sowingDate,12+k*11): null, done:k<done, dose:['NPK 19:19:19','Urea + SOP','12:61:00','00:52:34','Micronutrient mix'][k%5]});
   }
+
   // activities
   const n = status==='pending'?2:4+Math.floor(rnd()*4);
   for(let k=0;k<n;k++){
@@ -486,6 +491,43 @@ let FARMS = SEED.map((r,i)=>{
   f.activities.sort((a,b)=> a.date<b.date?1:-1);
   return f;
 });
+
+/* ---- Reference record: exact values from the client's farmer record sheet (Code 5755) ---- */
+(function(){
+  const f = FARMS.find(x=>x.code==='5755'); if(!f) return;
+  Object.assign(f,{
+    sn:1, panchiyan:'XXX25', mobile:'9165131488', crop:'Plant', area:1,
+    supervisor:'Mohit Dhote', zonal:'Sandeep Choudhary', devTeam:'Abhijit Patil', devIncharge:'Suyash Dumbre',
+    dripSurveyDate:'2025-10-15', dripCompany:'JAIN', quotation:105553,
+    agreement:'YES', poToCompany:'YES', dripDelivered:'YES', dripInstalled:'YES',
+    plough:'YES', rowDistance:'5 ft', dairyPreparation:'YES',
+    sowingDate:'2025-12-30', seedDetails:'D.E.B.', seedTreatment:'YES', basalDose:'YES',
+    drenching:'YES', weedicide:'YES',
+    generalRemark:'Plot visited with drip company for survey. Sowing, seed treatment and basal dose completed on 30 Dec. Fertigation started 25 Jan.',
+    liteEarthing:'2026-02-28', mediumEarthing:'2026-04-27', heavyEarthing:'2026-05-28'
+  });
+  const fd=['2026-01-25','2026-02-05','2026-02-22','2026-03-05','2026-03-14','2026-03-28','2026-04-05','2026-04-14',
+    '2026-04-21','2026-04-30','2026-05-08','2026-05-17','2026-05-24','2026-05-30','2026-06-11','2026-06-21',
+    '2026-06-30','2026-07-08','2026-07-16','2026-07-24','2026-08-01','2026-08-14','2026-08-23'];
+  const today=NOW.toISOString().slice(0,10);
+  f.fert.forEach((x,i)=>{ x.date = fd[i]||null; x.done = !!(x.date && x.date<=today); });
+  const log=[
+    ['2025-10-08','Farm Visit','Plot visit and farmer meet with circle supervisor'],
+    ['2025-10-15','Inspection','Plot visit with drip company for survey'],
+    ['2025-11-01','Farm Visit','Plot visit for 2nd plough'],
+    ['2025-12-03','Farm Visit','Plot visit for saar'],
+    ['2025-12-30','Sowing','Sowing, seed treatment and basal dose completed'],
+    ['2026-01-05','Drenching','Drenching done'],
+    ['2026-01-15','Weedicide','Weedicide spray completed'],
+    ['2026-01-20','Farm Visit','Visit for fertigation starting, but electricity fault found at pump house'],
+    ['2026-01-25','Fertigation','First fertigation done with recommended dose']
+  ];
+  f.activities = log.map(([date,type,desc],k)=>({id:'a'+(ACT_ID++),farmId:f.id,type,desc,date,
+    time:['10:30 AM','11:15 AM','09:40 AM','04:10 PM','08:50 AM','10:05 AM','03:30 PM','12:20 PM','09:15 AM'][k],
+    by:f.supervisor})).sort((a,b)=> a.date<b.date?1:-1);
+})();
+
+
 
 /* derived */
 const byRegion = r => FARMS.filter(f=>f.region===r);
@@ -869,13 +911,14 @@ function vFarm(id){
    <div class="two">
      <div class="stack">
        <div class="card">
-         <div class="card-h">${svg(IC.file,15)}<h3>Farm Information</h3><div class="r t2">From farm master record</div></div>
+         <div class="card-h">${svg(IC.file,15)}<h3><span class="pill">1</span> Basic &amp; Farmer Information</h3><div class="r t2">Farmer record sheet</div></div>
          <div class="card-b"><div class="kv">
+           ${row('S.N.',`<span class="mono">${f.sn}</span>`)}
+           ${row('Code',`<span class="mono">${f.code}</span>`)}
            ${row('Farmer Name',esc(f.owner))}
-           ${row('Farm Code',f.code)}
-           ${row('Mobile',`<span class="mono">${esc(f.mobile)}</span>`)}
-           ${row('Region',esc(f.region))}
-           ${row('Village',esc(f.village))}
+           ${row('Mobile No.',`<span class="mono">${esc(f.mobile)}</span>`)}
+           ${row('Circle Name',esc(f.region))}
+           ${row('Village Name',esc(f.village))}
            ${row('Crop Type',esc(f.crop))}
            ${row('Address',esc(f.address))}
            ${row('Soil Type',esc(f.soilType))}
@@ -885,25 +928,36 @@ function vFarm(id){
        </div>
 
        <div class="card">
-         <div class="card-h">${svg(IC.tool,15)}<h3>Drip &amp; Infrastructure</h3>
-           <div class="r">${f.dripInstalled==='YES'?`<span class="badge b-yes">Installed</span>`:`<span class="badge b-attention"><i></i>In progress</span>`}</div></div>
+         <div class="card-h">${svg(IC.users,15)}<h3><span class="pill">2</span> Recommendations (Name)</h3></div>
          <div class="card-b"><div class="kv">
-           ${row('Drip Survey Date',iso2s(f.dripSurveyDate))}
-           ${row('Drip Company',esc(f.dripCompany))}
-           ${row('Area',f.area+' Hac.')}
-           ${row('Quotation',`<span class="mono">${inr(f.quotation)}</span>`)}
-           ${row('Agreement With Farmer',ynBadge(f.agreement))}
-           ${row('PO To Company',ynBadge(f.poToCompany))}
-           ${row('Drip Delivered',ynBadge(f.dripDelivered))}
-           ${row('Drip Installed',ynBadge(f.dripInstalled))}
-           ${row('Plough',ynBadge(f.plough))}
-           ${row('Row Distance',esc(f.rowDistance))}
-           ${row('Dairy Preparation',ynBadge(f.dairyPreparation))}
+           ${row('Circle Supervisor',esc(f.supervisor))}
+           ${row('Zonal In-Charge',esc(f.zonal))}
+           ${row('Devlop. Team',esc(f.devTeam))}
+           ${row('Devlop. In Charge',esc(f.devIncharge))}
          </div></div>
        </div>
 
        <div class="card">
-         <div class="card-h">${svg(IC.leaf,15)}<h3>Sowing &amp; Crop</h3><div class="r t2">${f.sowingDate?'Sown '+iso2s(f.sowingDate):'Not sown'}</div></div>
+         <div class="card-h">${svg(IC.tool,15)}<h3><span class="pill">3</span> Drip &amp; Work Status</h3>
+           <div class="r">${f.dripInstalled==='YES'?`<span class="badge b-yes">Installed</span>`:`<span class="badge b-attention"><i></i>In progress</span>`}</div></div>
+         <div class="card-b"><div class="kv">
+           ${row('Drip Survey Date',iso2s(f.dripSurveyDate))}
+           ${row('Drip Company',esc(f.dripCompany))}
+           ${row('Area (Hac.)',f.area)}
+           ${row('Panchiyan / ID',`<span class="mono">${esc(f.panchiyan)}</span>`)}
+           ${row('Quotation',`<span class="mono">${inr(f.quotation)}</span>`)}
+           ${row('Agreem. With Farmer',ynBadge(f.agreement))}
+           ${row('PO To Company',ynBadge(f.poToCompany))}
+           ${row('Drip Delivered',ynBadge(f.dripDelivered))}
+           ${row('Drip Installed',ynBadge(f.dripInstalled))}
+           ${row('Plough',ynBadge(f.plough))}
+           ${row('Row Distance (ft)',esc(f.rowDistance))}
+           ${row('Dairy Prep.',ynBadge(f.dairyPreparation))}
+         </div></div>
+       </div>
+
+       <div class="card">
+         <div class="card-h">${svg(IC.leaf,15)}<h3><span class="pill">4</span> Sowing &amp; Seed Treatment</h3><div class="r t2">${f.sowingDate?'Sown '+iso2s(f.sowingDate):'Not sown'}</div></div>
          <div class="card-b"><div class="kv">
            ${row('Sowing Date',iso2s(f.sowingDate))}
            ${row('Seed Details',esc(f.seedDetails))}
@@ -913,26 +967,32 @@ function vFarm(id){
            ${row('Weedicide',ynBadge(f.weedicide))}
            ${row('Plants (per acre)',`<span class="mono">${f.plantsPerAcre.toLocaleString('en-IN')}</span>`)}
            ${row('Expected Yield',f.expectedYield)}
-         </div></div>
+         </div>
+         <div style="margin-top:12px;padding:11px 13px;border:1px solid var(--line);border-radius:10px;background:var(--soft)">
+           <div class="t2" style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px">General Remark</div>
+           <div>${esc(f.generalRemark)}</div>
+         </div>
+         </div>
        </div>
 
        <div class="card">
-         <div class="card-h">${svg(IC.drop,15)}<h3>Fertigation Progress</h3>
-           <div class="r t2"><b style="color:var(--ink)">${done}</b> of 24 rounds</div></div>
+         <div class="card-h">${svg(IC.drop,15)}<h3><span class="pill">6</span> Fertigation Dates (1st – 30th)</h3>
+           <div class="r t2"><b style="color:var(--ink)">${done}</b> of 30 rounds</div></div>
          <div class="card-b">
            <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
-             <div class="bar" style="flex:1"><i style="width:${done/24*100}%"></i></div>
-             <span class="t2 mono">${Math.round(done/24*100)}%</span>
+             <div class="bar" style="flex:1"><i style="width:${done/30*100}%"></i></div>
+             <span class="t2 mono">${Math.round(done/30*100)}%</span>
            </div>
            <div class="fert">
              ${f.fert.map((x,i)=>`<div class="fcell ${x.done?'done':(i===nextIdx&&x.date?'next':'wait')}">
                 <div class="no">${x.done?svg(IC.check,11,3):(i===nextIdx?svg(IC.cal,11):'<span style="width:11px;height:11px;border:1.6px solid currentColor;border-radius:50%;display:inline-block"></span>')} ${String(x.no).padStart(2,'0')}</div>
-                <div class="dt">${x.date? iso2s(x.date).slice(0,6)+' '+iso2s(x.date).slice(7):'Pending'}</div>
+                <div class="dt">${x.date? iso2s(x.date).slice(0,6)+' '+iso2s(x.date).slice(7):'—'}</div>
                 <div class="t2" style="font-size:10.5px;margin-top:2px">${x.dose}</div>
               </div>`).join('')}
            </div>
          </div>
        </div>
+
      </div>
 
      <div class="stack">
@@ -948,19 +1008,30 @@ function vFarm(id){
          <div class="card-b people">
            ${person(f.supervisor,'Circle Supervisor',sup.id?`supervisor:${sup.id}`:null)}
            ${person(f.zonal,'Zonal In-Charge')}
-           ${person(f.devTeam,'Development Team')}
-           ${person(f.devIncharge,'Development In-Charge')}
+           ${person(f.devTeam,'Devlop. Team')}
+           ${person(f.devIncharge,'Devlop. In Charge')}
          </div>
        </div>
 
        <div class="card">
-         <div class="card-h">${svg(IC.cal,15)}<h3>Earthing Up</h3></div>
+         <div class="card-h">${svg(IC.cal,15)}<h3><span class="pill">5</span> Earthing Up Details (Date)</h3></div>
          <div class="card-b"><div class="kv" style="grid-template-columns:150px 1fr">
            ${row('Lite Earthing Up',iso2s(f.liteEarthing))}
            ${row('Medium Earthing Up',iso2s(f.mediumEarthing))}
            ${row('Heavy Earthing Up',iso2s(f.heavyEarthing))}
          </div></div>
        </div>
+
+       <div class="card">
+         <div class="card-h">${svg(IC.file,15)}<h3>Date &amp; Remark Log</h3><div class="r t2">${f.activities.length} entries</div></div>
+         <div class="card-b" style="padding:0">
+           <div class="tw"><table><thead><tr><th style="width:110px">Date</th><th>Remark</th></tr></thead>
+             <tbody>${[...f.activities].sort((a,b)=>a.date<b.date?-1:1).map(a=>`<tr>
+               <td class="mono t2" style="white-space:nowrap">${iso2s(a.date)}</td>
+               <td>${esc(a.desc)}</td></tr>`).join('')}</tbody></table></div>
+         </div>
+       </div>
+
 
        <div class="card exp">
          <div class="card-h"><h3>Owner &amp; Contact</h3><span class="chev r">${svg(IC.down,15)}</span></div>
@@ -1228,7 +1299,8 @@ function farmDrawer(farm,presetRegion){
             dripDelivered:'NO',dripInstalled:'NO',plough:'NO',rowDistance:'5 ft',dairyPreparation:'NO',sowingDate:null,
             seedDetails:'—',seedTreatment:'NO',basalDose:'NO',drenching:'NO',weedicide:'NO',liteEarthing:null,mediumEarthing:null,
             heavyEarthing:null,soilType:'Medium black',waterSource:'Bore well',plantsPerAcre:8000,expectedYield:'—',
-            fert:Array.from({length:24},(_,k)=>({no:k+1,date:null,done:false,dose:['NPK 19:19:19','Urea + SOP','12:61:00','00:52:34','Micronutrient mix'][k%5]})),
+            sn:FARMS.length+1,panchiyan:'—',generalRemark:'New farm record. Awaiting drip survey and sowing plan.',
+            fert:Array.from({length:30},(_,k)=>({no:k+1,date:null,done:false,dose:['NPK 19:19:19','Urea + SOP','12:61:00','00:52:34','Micronutrient mix'][k%5]})),
             activities:[{id:'a'+(ACT_ID++),type:'Other',desc:'Farm record created in AgriTrack',date:NOW.toISOString().slice(0,10),time:'10:30 AM',by:'Admin'}]};
           FARMS.unshift(nf);
           closeOverlays();renderNav();go('farm',nf.id);toast('Farm created successfully');
